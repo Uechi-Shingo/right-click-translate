@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Harness page title</title>
+<style>body{font:16px/1.6 sans-serif;margin:24px;max-width:720px}.spacer{height:3000px}</style>
+</head>
+<body>
+<!-- content.js を実ブラウザの DOM で動かすための確認用ページ。chrome.* は偽物に差し替える。 -->
+<script>
+  window.__sent = [];
+  window.__listener = null;
+  window.chrome = {
+    runtime: {
+      onMessage: { addListener(fn) { window.__listener = fn; } },
+      sendMessage: async (msg) => {
+        window.__sent.push(msg.texts);
+        await new Promise((r) => setTimeout(r, 30));
+        return { ok: true, results: msg.texts.map((t) => '訳:' + t) };
+      },
+    },
+  };
+</script>
+
+<h1 id="h">Welcome to the harness</h1>
+<p id="p1">This is <b>bold</b> text inside a <a href="#">link sentence</a> for testing.</p>
+<p id="p2">  Leading and trailing spaces are kept.  </p>
+<p id="jp">これはすでに日本語の文章です。</p>
+<p id="num">12345 - 67890</p>
+<pre id="code">const x = 1; // code must stay</pre>
+<p class="notranslate" id="nt">Do not translate this block.</p>
+<p id="dup">Repeated sentence.</p>
+<p id="dup2">Repeated sentence.</p>
+
+<div class="spacer"></div>
+
+<p id="far">This paragraph is far below the fold and should be translated lazily.</p>
+<div id="mount"></div>
+<script src="../extension/content.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# 配布用ファイルの作業場所（make-release.ps1 が作る）。公開用の最新版は releases/ に置かれる
+dist/
+
+# 確認用に生成するファイル
+*.built.html
+
+# 翻訳の質の比較ツール（tests/ab-quality.mjs）が出力する結果
+tests/ab-result/
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# 秘密鍵・環境変数・ログ（万一置いてしまっても、コミットされないように）
+*.pem
+*.key
+*.crx
+.env
+.env.*
+*.log
+
+# OS・エディタ
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

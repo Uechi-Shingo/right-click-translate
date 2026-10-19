@@ -1,0 +1,55 @@
+/* ライト／ダークは、利用者の OS・ブラウザの設定に合わせる（強制しない） */
+:root { color-scheme: light dark; --fg: #1f2328; --muted: #59636e; --bg: #fff; --card: #f6f8fa; --line: #d0d7de; --accent: #0969da; --ok: #1a7f37; --err: #cf222e; --warn: #9a6700; --warn-bg: #fff8c5; }
+@media (prefers-color-scheme: dark) {
+  :root { --fg: #e6edf3; --muted: #9198a1; --bg: #0d1117; --card: #161b22; --line: #30363d; --accent: #4493f8; --ok: #3fb950; --err: #f85149; --warn: #d29922; --warn-bg: #2b2110; }
+}
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.7 system-ui, "Yu Gothic UI", "Meiryo", sans-serif; }
+main { max-width: 680px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 28px 0 8px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+label { display: block; font-weight: 600; margin-top: 14px; }
+label:first-child { margin-top: 0; }
+input[type=text], input[type=password], select { width: 100%; box-sizing: border-box; padding: 8px 10px; margin-top: 4px;
+  font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
+input[hidden] { display: none; }
+.hint { color: var(--muted); font-size: 13px; font-weight: 400; margin-top: 2px; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
+.check input { margin-top: 6px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.row.compact { align-items: center; margin-top: 10px; }
+.row.compact .hint { margin: 0; }
+button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: inherit; cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--err); }
+button:disabled { opacity: .6; cursor: default; }
+#status { margin-top: 12px; min-height: 1.7em; white-space: pre-wrap; }
+#status.ok { color: var(--ok); }
+#status.err { color: var(--err); }
+.notice { margin: 20px 0 0; padding: 12px 16px; border: 1px solid var(--warn); border-left-width: 5px; border-radius: 8px; background: var(--warn-bg); }
+.notice ul { margin: 6px 0 10px; padding-left: 1.4em; }
+.notice li { margin: 2px 0; }
+.notice .check { margin: 0; font-weight: 600; }
+ol, ul { padding-left: 1.4em; margin: 6px 0; }
+a { color: var(--accent); }
+.card.spaced { margin-top: 16px; }
+.hint.block { display: block; }
+[hidden] { display: none !important; }
+fieldset.card { margin-left: 0; margin-right: 0; min-width: 0; }
+fieldset.card legend { font-weight: 600; padding: 0 6px; }
+fieldset.providers .check + .check { margin-top: 10px; }
+.field-title { font-weight: 600; }
+.state { margin-top: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.state.ok { border-color: var(--ok); }
+.state.wait { border-color: var(--warn); }
+#chatgptMessage { margin-top: 6px; white-space: pre-wrap; }
+#chatgptMessage.err { color: var(--err); }
+#chatgptSection .hint.block { margin-top: 10px; }
+#geminiSection + #chatgptSection, #chatgptSection + .check { margin-top: 14px; }
+.card > .check { margin-top: 14px; }
+#chatgptSection > .check { margin-top: 14px; }
+.cross { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+#crossNote { margin: 6px 0 0 26px; }
+#crossNote.ok { color: var(--ok); }
+#crossNote.warn { color: var(--warn); }

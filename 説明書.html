@@ -1,0 +1,1747 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>右クリック翻訳 拡張機能 説明書</title>
+<style>
+  :root {
+    --bg: #f6f8fa; --surface: #ffffff; --fg: #1f2328; --muted: #59636e; --line: #d1d9e0;
+    --accent: #0969da; --accent-soft: #ddf4ff;
+    --ok: #1a7f37; --ok-soft: #dafbe1;
+    --warn: #9a6700; --warn-soft: #fff8c5;
+    --err: #cf222e; --err-soft: #ffebe9;
+    --code-bg: #eaeef2;
+    color-scheme: light dark; /* ライト／ダークは、利用者の OS・ブラウザの設定に合わせる（強制しない） */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --surface: #151b23; --fg: #e6edf3; --muted: #9198a1; --line: #30363d;
+      --accent: #4493f8; --accent-soft: #11273f;
+      --ok: #3fb950; --ok-soft: #12261e;
+      --warn: #d29922; --warn-soft: #2b2110;
+      --err: #f85149; --err-soft: #2d1316;
+      --code-bg: #262c36;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.85 system-ui, -apple-system, "Yu Gothic UI", "Hiragino Sans", "Meiryo", sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  a { color: var(--accent); }
+  code, kbd {
+    font: 0.9em/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
+    background: var(--code-bg); border-radius: 5px; padding: 1px 6px; word-break: break-all;
+  }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; background: var(--surface); }
+  pre.cmd {
+    margin: 12px 0; padding: 12px 16px; background: var(--code-bg); border-radius: 8px; overflow-x: auto;
+    font: 14px/1.6 ui-monospace, "Cascadia Mono", Consolas, monospace; white-space: pre;
+  }
+
+  /* ---------- ヘッダー ---------- */
+  .hero { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .hero-inner { max-width: 1120px; margin: 0 auto; padding: 40px 20px 32px; }
+  .eyebrow { margin: 0 0 6px; color: var(--accent); font-weight: 700; font-size: 14px; letter-spacing: .04em; }
+  h1 { margin: 0 0 12px; font-size: clamp(26px, 4.4vw, 38px); line-height: 1.35; }
+  .lead { margin: 0; max-width: 46em; color: var(--muted); font-size: 17px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { font-size: 13px; padding: 2px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--muted); }
+
+  /* ---------- レイアウト ---------- */
+  .layout { max-width: 1120px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 44px; }
+  .toc { position: sticky; top: 24px; align-self: start; max-height: calc(100vh - 48px); overflow: auto; padding: 28px 0; font-size: 14px; }
+  .toc p { margin: 0 0 8px; font-weight: 700; color: var(--muted); font-size: 12px; letter-spacing: .06em; }
+  .toc ol { list-style: none; margin: 0; padding: 0; }
+  .toc a { display: block; padding: 4px 10px; margin-left: -10px; border-left: 3px solid transparent; text-decoration: none; color: var(--muted); line-height: 1.5; }
+  .toc a:hover { color: var(--fg); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 700; }
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; gap: 0; }
+    .toc { position: static; max-height: none; padding: 20px 0 0; }
+    .toc ol { columns: 2; column-gap: 20px; }
+  }
+  @media (max-width: 520px) { .toc ol { columns: 1; } }
+
+  main { padding: 28px 0 80px; min-width: 0; }
+  section { margin: 0 0 56px; scroll-margin-top: 16px; }
+  h2 { margin: 0 0 6px; font-size: 26px; line-height: 1.4; padding-top: 8px; }
+  h2 .no { color: var(--accent); margin-right: 8px; font-variant-numeric: tabular-nums; }
+  h3 { margin: 30px 0 8px; font-size: 18px; line-height: 1.5; scroll-margin-top: 16px; }
+  p { margin: 0 0 14px; }
+  .sub { margin: 0 0 20px; color: var(--muted); }
+  ul, ol { margin: 0 0 14px; padding-left: 1.5em; }
+  li { margin: 4px 0; }
+
+  /* ---------- 部品 ---------- */
+  .callout { border: 1px solid var(--line); border-left-width: 5px; border-radius: 8px; padding: 14px 18px; margin: 18px 0; background: var(--surface); }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout .ttl { display: block; font-weight: 700; margin-bottom: 2px; }
+  .callout.info { border-left-color: var(--accent); background: var(--accent-soft); }
+  .callout.ok { border-left-color: var(--ok); background: var(--ok-soft); }
+  .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+  .callout.err { border-left-color: var(--err); background: var(--err-soft); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 18px 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+  .card h3, .card h4 { margin: 0 0 6px; font-size: 16px; }
+  .card p, .card ul { margin: 0; font-size: 15px; }
+  .card ul { padding-left: 1.3em; }
+  .card .big { font-size: 28px; line-height: 1; margin-bottom: 8px; }
+  .card.ok { border-top: 4px solid var(--ok); }
+  .card.err { border-top: 4px solid var(--err); }
+
+  ol.steps { list-style: none; padding: 0; counter-reset: step; margin: 18px 0; }
+  ol.steps > li { counter-increment: step; position: relative; margin: 0 0 14px; padding: 14px 18px 14px 64px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  ol.steps > li::before {
+    content: counter(step); position: absolute; left: 16px; top: 14px; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; display: grid; place-items: center;
+  }
+  ol.steps > li > :last-child { margin-bottom: 0; }
+  ol.steps .why { color: var(--muted); font-size: 14px; }
+
+  .table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 1.7; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: 0; }
+  th { background: var(--bg); font-size: 13px; color: var(--muted); white-space: nowrap; }
+  td:first-child { font-weight: 600; }
+  .nw { white-space: nowrap; }
+  td ul { margin: 0; padding-left: 1.2em; }
+  @media (max-width: 700px) {
+    table { min-width: 600px; }
+    .table-wrap { -webkit-overflow-scrolling: touch; }
+  }
+
+  .fig { margin: 20px 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .fig svg { display: block; width: 100%; height: auto; }
+  .fig figcaption { margin-top: 8px; color: var(--muted); font-size: 14px; text-align: center; }
+  svg .box { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+  svg .box.accent { fill: var(--accent-soft); stroke: var(--accent); }
+  svg .box.ok { fill: var(--ok-soft); stroke: var(--ok); }
+  svg .zone { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 6 5; }
+  svg .t { fill: var(--fg); font: 700 15px system-ui, "Yu Gothic UI", "Meiryo", sans-serif; }
+  svg .s { fill: var(--muted); font: 400 12.5px system-ui, "Yu Gothic UI", "Meiryo", sans-serif; }
+  svg .l { fill: var(--accent); font: 700 12.5px system-ui, "Yu Gothic UI", "Meiryo", sans-serif; }
+  svg .arrow { stroke: var(--accent); stroke-width: 2; fill: none; }
+  svg .head { fill: var(--accent); }
+  svg .stop { stroke: var(--err); stroke-width: 2; fill: none; }
+  svg .stop-t { fill: var(--err); font: 700 12.5px system-ui, "Yu Gothic UI", "Meiryo", sans-serif; }
+
+  .pipeline { display: grid; gap: 0; margin: 18px 0; }
+  .pipeline > div { position: relative; padding: 12px 18px 12px 18px; margin-left: 18px; border-left: 3px solid var(--line); }
+  .pipeline > div::before { content: ""; position: absolute; left: -9px; top: 18px; width: 15px; height: 15px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg); }
+  .pipeline h4 { margin: 0 0 2px; font-size: 16px; }
+  .pipeline p { margin: 0; font-size: 15px; }
+  .pipeline .tech { display: block; margin-top: 4px; font-size: 13px; color: var(--muted); }
+
+  dl.gloss { margin: 16px 0; }
+  dl.gloss dt { font-weight: 700; margin-top: 16px; }
+  dl.gloss dd { margin: 2px 0 0; color: var(--fg); }
+  dl.gloss dd .ex { color: var(--muted); }
+
+  .tree { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; overflow-x: auto; font: 14px/1.8 ui-monospace, "Cascadia Mono", Consolas, monospace; white-space: pre; }
+  .tree .c { color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); padding: 24px 20px 40px; text-align: center; color: var(--muted); font-size: 14px; }
+  footer p { margin: 0 0 6px; }
+
+  @media print {
+    .toc { display: none; }
+    .layout { display: block; }
+    body { background: #fff; }
+    section { break-inside: avoid-page; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">説明書　バージョン 0.5.0</p>
+    <h1>右クリックで日本語に翻訳する<br>ブラウザ拡張機能</h1>
+    <p class="lead">使い方に加えて、「安全に使うための心得」「APIキーが守られる仕組み」「中で使われている技術」を、専門知識がなくても読めるようにまとめた説明書です。</p>
+    <div class="chips">
+      <span class="chip">Brave / Chrome / Edge 対応</span>
+      <span class="chip">右クリックで翻訳</span>
+      <span class="chip">Gemini の無料枠 ／ ChatGPT のプラン（併用可）</span>
+      <span class="chip">個人製作・非公式</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="目次">
+    <p>目次</p>
+    <ol>
+      <li><a href="#summary">3行でわかる要約</a></li>
+      <li><a href="#rules">安全に使うための 7 か条</a></li>
+      <li><a href="#overview">全体の流れ</a></li>
+      <li><a href="#install">使えるようにする</a></li>
+      <li><a href="#usage">使い方</a></li>
+      <li><a href="#money">お金と無料枠の話</a></li>
+      <li><a href="#security">安全性とプライバシー</a></li>
+      <li><a href="#trouble">困ったとき</a></li>
+      <li><a href="#stack">使っている技術</a></li>
+      <li><a href="#how">中の仕組み</a></li>
+      <li><a href="#design">設計の考え方</a></li>
+      <li><a href="#files">ファイル構成</a></li>
+      <li><a href="#limits">できないこと・今後</a></li>
+      <li><a href="#distribute">配布する方へ</a></li>
+      <li><a href="#glossary">用語集</a></li>
+      <li><a href="#history">更新履歴</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============================================================ -->
+    <section id="summary">
+      <h2><span class="no">1</span>3行でわかる要約</h2>
+      <p class="sub">まずは全体像だけつかみたい方は、ここと次の「7 か条」だけ読めば十分です。</p>
+      <div class="cards">
+        <div class="card">
+          <div class="big">🖱️</div>
+          <h3>右クリックで翻訳</h3>
+          <p>ページ上で右クリックすると、ページ全体や選んだ文章を日本語にできます。ブラウザ標準の翻訳と同じ感覚で使えます。</p>
+        </div>
+        <div class="card">
+          <div class="big">🤖</div>
+          <h3>翻訳は AI（2 通りから選べます）</h3>
+          <p>実際の翻訳は、Google の「Gemini」か、OpenAI の「ChatGPT」に依頼しています。拡張機能は「依頼して、結果を貼り付ける係」です。</p>
+        </div>
+        <div class="card">
+          <div class="big">🔑</div>
+          <h3>鍵は「あなた専用」</h3>
+          <p>Gemini なら<strong>ご自身で作る無料の APIキー</strong>、ChatGPT なら<strong>ご自身の ChatGPT アカウントでのサインイン</strong>が必要です。他の人の鍵は使いません（貸し借りもしません）。</p>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <span class="ttl">この拡張機能について</span>
+        個人が作成し、配布している<strong>非公式のツール</strong>です。Google・OpenAI の製品ではなく、どちらとも関係がありません。
+        ブラウザのストアの審査は受けていません。現状のまま（無保証）で提供しており、利用は自己責任でお願いします。
+        「Google」「Gemini」は Google LLC の、「OpenAI」「ChatGPT」は OpenAI の商標です。
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="rules">
+      <h2><span class="no">2</span>安全に使うための 7 か条</h2>
+      <p class="sub">難しいことは書いていません。この 7 つを守れば、大きな問題はまず起きません。</p>
+      <div class="cards">
+        <div class="card ok"><h4>① 鍵は自分のものを使う</h4><p>APIキーは、ご自身の Google アカウントで無料で作ります。ChatGPT は、ご自身のアカウントでサインインします。配布した人の鍵は使えません。</p></div>
+        <div class="card ok"><h4>② 鍵は誰にも見せない</h4><p>APIキーやサインイン情報を、チャット・メール・SNS・画面共有・スクリーンショットに載せないでください。</p></div>
+        <div class="card ok"><h4>③ 請求先は登録しない（Gemini）</h4><p>Google 側で支払い方法を登録しなければ、有料プランにはなりません。</p></div>
+        <div class="card ok"><h4>④ 機密ページでは使わない</h4><p>メール・社内文書・個人情報のあるページでは翻訳しないでください（文章が Google または OpenAI に送られます）。</p></div>
+        <div class="card ok"><h4>⑤ 配布元から直接受け取る</h4><p>知らない人や、出所の分からない場所のファイルは入れないでください。</p></div>
+        <div class="card ok"><h4>⑥ 共用パソコンでは「忘れる」設定</h4><p>設定画面で「キー・サインイン情報を保存しておく」をオフにすると、ブラウザを閉じたときに消えます。使い終わったら、ChatGPT はサインアウトします。</p></div>
+        <div class="card err"><h4>⑦ おかしいと思ったら、すぐに無効にする</h4><p>身に覚えのない動作や、鍵を見られたかもしれないときは、Google 側でキーを削除、または ChatGPT の接続を解除してください（<a href="#leak">手順</a>）。</p></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="overview">
+      <h2><span class="no">3</span>全体の流れ</h2>
+      <p class="sub">右クリックしてから日本語になるまでに、裏側では次のことが起きています。</p>
+
+      <figure class="fig">
+        <svg viewBox="0 0 760 210" role="img" aria-label="あなたのブラウザ、この拡張機能、AI（Gemini または ChatGPT）の間でやりとりする流れの図">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path class="head" d="M0 0L10 5L0 10z"/>
+            </marker>
+          </defs>
+          <rect class="box" x="20" y="45" width="170" height="120" rx="12"/>
+          <text class="t" x="105" y="95" text-anchor="middle">あなたのブラウザ</text>
+          <text class="s" x="105" y="118" text-anchor="middle">英語などのページ</text>
+
+          <rect class="box accent" x="295" y="45" width="170" height="120" rx="12"/>
+          <text class="t" x="380" y="95" text-anchor="middle">この拡張機能</text>
+          <text class="s" x="380" y="118" text-anchor="middle">ブラウザの中で動く</text>
+
+          <rect class="box" x="570" y="45" width="170" height="120" rx="12"/>
+          <text class="t" x="655" y="95" text-anchor="middle">Gemini / ChatGPT</text>
+          <text class="s" x="655" y="118" text-anchor="middle">Google / OpenAI のサーバー</text>
+
+          <line class="arrow" x1="194" y1="78" x2="291" y2="78" marker-end="url(#ah)"/>
+          <text class="l" x="242" y="68" text-anchor="middle">① 右クリック</text>
+          <line class="arrow" x1="469" y1="78" x2="566" y2="78" marker-end="url(#ah)"/>
+          <text class="l" x="517" y="68" text-anchor="middle">② 文章を送る</text>
+          <line class="arrow" x1="566" y1="134" x2="469" y2="134" marker-end="url(#ah)"/>
+          <text class="l" x="517" y="158" text-anchor="middle">③ 訳文が返る</text>
+          <line class="arrow" x1="291" y1="134" x2="194" y2="134" marker-end="url(#ah)"/>
+          <text class="l" x="242" y="158" text-anchor="middle">④ 置き換える</text>
+        </svg>
+        <figcaption>図1　右クリック → 文章を送る → 訳文が返る → ページの文字を置き換える</figcaption>
+      </figure>
+
+      <ol>
+        <li><strong>右クリック</strong>：メニューから「このページを日本語に翻訳」を選びます。</li>
+        <li><strong>文章を送る</strong>：拡張機能がページの文字を集めて、選んだ AI に「日本語にして」と依頼します（Gemini ならあなたの APIキーを、ChatGPT ならサインインの証明を添えて）。</li>
+        <li><strong>訳文が返る</strong>：AI が日本語にした文章を返します。</li>
+        <li><strong>置き換える</strong>：拡張機能が、ページ上の元の文字を訳文に差し替えます（見た目のレイアウトはそのままです）。</li>
+      </ol>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="install">
+      <h2><span class="no">4</span>使えるようにする</h2>
+      <p class="sub">最初の 1 回だけ行う準備です。所要時間は 10 分ほどです。</p>
+
+      <h3>A. ファイルを受け取って、確認する</h3>
+      <ol class="steps">
+        <li>
+          <p><strong>配布元から、zip ファイルを受け取る</strong></p>
+          <p class="why">ファイル名は <code>right-click-translate-バージョン.zip</code> です。出所の分からないファイルは使わないでください。</p>
+        </li>
+        <li>
+          <p><strong>（おすすめ）改ざんされていないか確認する</strong></p>
+          <p>配布元から<strong>別の方法で</strong>受け取った「SHA-256 の値」と、手元のファイルの値が一致するか確かめます。Windows の PowerShell で、zip を置いたフォルダで次を実行します。</p>
+<pre class="cmd">Get-FileHash .\right-click-translate-0.5.0.zip -Algorithm SHA256</pre>
+          <p class="why">表示された長い英数字が、配布元から受け取った値と<strong>1 文字も違わず</strong>一致すれば OK です。違うときは、使わずに配布元へ連絡してください。（Mac では <code>shasum -a 256 ファイル名</code>）</p>
+        </li>
+        <li>
+          <p><strong>zip を展開し、「消さない場所」に置く</strong></p>
+          <p class="why">例：<code>ドキュメント</code> の中。この拡張機能は、読み込んだフォルダをその場で参照して動くため、<strong>後でフォルダを移動・削除すると動かなくなります</strong>。</p>
+        </li>
+      </ol>
+
+      <h3>B. ブラウザに入れる</h3>
+      <ol class="steps">
+        <li>
+          <p><strong>拡張機能の管理ページを開く</strong></p>
+          <p>ブラウザの URL を入力する欄（アドレスバー）に <code>brave://extensions</code> と入力して <kbd>Enter</kbd> を押します。Chrome は <code>chrome://extensions</code>、Edge は <code>edge://extensions</code> です。</p>
+        </li>
+        <li>
+          <p><strong>「デベロッパーモード」をオンにする</strong></p>
+          <p class="why">なぜ？ ストアに載っていない、自分で用意した拡張機能を読み込むためのスイッチです。「ストアの審査を受けていない」といった表示が出ることがありますが、読み込みのために必要な設定です。</p>
+        </li>
+        <li>
+          <p><strong>「パッケージ化されていない拡張機能を読み込む」を押し、展開したフォルダの中の <code>extension</code> フォルダを選ぶ</strong></p>
+          <p class="why">README.txt などがあるフォルダではなく、<code>manifest.json</code> が直接入っている <code>extension</code> フォルダを選びます。</p>
+        </li>
+        <li>
+          <p><strong>一覧に「右クリックで日本語に翻訳」が出て、オンになっていれば完了</strong></p>
+          <p class="why">初回は自動で設定画面が開きます。開かなければ、拡張機能の「詳細」から「拡張機能のオプション」を開いてください。</p>
+        </li>
+      </ol>
+
+      <h3>C. 使う AI を選んで、鍵（APIキーまたはサインイン）を設定する</h3>
+      <p>翻訳に使う AI は、<strong>設定画面の「使う AI」</strong>で選びます。次のどちらか、使いやすい方を設定してください（両方設定しておき、切り替えることもできます）。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>選択肢</th><th>向いている人</th><th>必要なもの</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="nw"><strong>Gemini API</strong></td>
+              <td>ChatGPT の契約がない・無料で使いたい。</td>
+              <td>Google アカウントで作る、無料の APIキー（下の「C-1」）。</td>
+            </tr>
+            <tr>
+              <td class="nw"><strong>ChatGPT のプラン</strong></td>
+              <td>ChatGPT Plus / Pro などをすでに契約している。APIキーを作りたくない。</td>
+              <td>ChatGPT アカウントでのサインイン（下の「C-2」）。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4 id="setup-gemini">C-1. Gemini API を使う場合：APIキー（利用のための合鍵）を作る</h4>
+      <ol class="steps">
+        <li>
+          <p><strong>設定画面の「はじめに必ずお読みください」を読み、「上記を理解しました」にチェックを入れる</strong></p>
+          <p class="why">翻訳する文章が Google または OpenAI に送られること、鍵の扱い方などが書かれています。チェックを入れるまで、翻訳は動きません。</p>
+        </li>
+        <li>
+          <p>「使う AI」で<strong>「Gemini API」</strong>を選びます。<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio の「APIキー」ページ</a>を開き、<strong>ご自身の</strong> Google アカウントでログインします。</p>
+        </li>
+        <li>
+          <p>「APIキーを作成」を押し、表示された英数字の文字列（<code>AIza</code> から始まります）をコピーします。</p>
+          <p class="why">支払い方法の登録を求められても、<strong>登録しないでください</strong>。登録しなければ無料枠の範囲でしか使えません（詳しくは「<a href="#money">お金と無料枠の話</a>」）。</p>
+        </li>
+        <li>
+          <p>設定画面の「Gemini APIキー」欄に貼り付け、<strong>「保存して接続テスト」</strong>を押します。</p>
+          <p class="why">緑色で「成功しました」と日本語の訳文が表示されれば準備完了です。赤い文字が出たら「<a href="#trouble">困ったとき</a>」を見てください。</p>
+        </li>
+        <li>
+          <p><strong>（任意）使うモデルを選びます。</strong>初期設定のままでも使えます。</p>
+          <p class="why">モデル欄には、Google から取得した「あなたのキーで使えるモデル」が新しい順に並びます。選び方は「<a href="#models">モデルの選び方</a>」を見てください。</p>
+        </li>
+      </ol>
+
+      <div class="callout warn">
+        <span class="ttl">APIキーは他人に見せないでください</span>
+        APIキーは、あなたの無料枠を使うための「合鍵」です。チャット、メール、SNS、画面共有、スクリーンショットなどに載せないようにしてください。他の人のキーを借りることも、自分のキーを貸すこともしないでください。
+      </div>
+
+      <h4 id="setup-chatgpt">C-2. ChatGPT のプランを使う場合：サインインする</h4>
+      <p>ChatGPT Plus / Pro などの契約の利用枠を使います。<strong>APIキーは要りません</strong>。OpenAI の「Sign in with ChatGPT」という、公式のサインインの仕組みを使います。</p>
+      <ol class="steps">
+        <li>
+          <p><strong>設定画面で、「上記を理解しました」にチェックを入れ、「使う AI」で「ChatGPT のプラン」を選ぶ</strong></p>
+          <p class="why">画面が切り替わり、「ChatGPT のサインイン」の欄が出ます。</p>
+        </li>
+        <li>
+          <p><strong>「ChatGPT でサインイン」を押す</strong></p>
+          <p class="why">新しいタブで、OpenAI のサインイン画面が開きます。パスワードなどを入力するのは<strong>この OpenAI の画面だけ</strong>です。この拡張機能にパスワードが渡ることはありません。</p>
+        </li>
+        <li>
+          <p><strong>ログインして、表示される内容を確認し、承認する</strong></p>
+          <p class="why">承認すると、タブが自動で閉じ、設定画面に「サインイン済み: （あなたのメールアドレス）」と表示されます。承認の画面には、「この拡張機能が、あなたの ChatGPT プランの利用枠を使う」という趣旨の内容が出ます。心当たりのないときは承認しないでください。</p>
+        </li>
+        <li>
+          <p><strong>モデルを確認して、「保存して接続テスト」を押す</strong></p>
+          <p class="why">サインインできると、あなたのアカウントで使えるモデルの一覧が自動で入り、翻訳向きの軽量なモデルが選ばれます。緑色で「成功しました」と訳文が出れば準備完了です。</p>
+        </li>
+      </ol>
+      <div class="callout warn">
+        <span class="ttl">ChatGPT のプランで使うときの注意</span>
+        <ul>
+          <li><strong>利用枠が減ります。</strong>翻訳に使った分は、ご契約の ChatGPT プランの利用枠から差し引かれます（ChatGPT 本体や Codex など、同じプランの他の使い方と利用枠を分け合います）。長いページを何度も訳すと、ChatGPT 本体が使いにくくなることがあります。残りは、ChatGPT の「設定 → 使用状況」で確認できます。</li>
+          <li><strong>公式の想定とは少し違う使い方です。</strong>OpenAI の公式ドキュメントは、この仕組みをオープンソース・個人利用のアプリ向けとして説明していますが、ブラウザの拡張機能での利用には触れていません（許可も禁止も書かれていません）。OpenAI の仕様変更で、使えなくなる可能性があります。そのときは、Gemini API に切り替えてお使いください。</li>
+          <li><strong>OpenAI の規約にも従ってください。</strong>サービスの利用規約・利用ポリシーは、ご自身で確認してください。この拡張機能の作者は、規約への適合を保証しません。</li>
+          <li><strong>他のアプリと同時にサインインしないでください。</strong>Codex（コマンドライン）など、同じ仕組みを使うアプリがサインインの途中だと、うまく完了しないことがあります。</li>
+        </ul>
+      </div>
+
+      <h4 id="setup-cross">C-3. 併用する：通常は Gemini の無料枠、使い切ったら ChatGPT（任意）</h4>
+      <p>Gemini と ChatGPT の<strong>両方を準備</strong>しておくと、片方が使えないときに、自動でもう一方に切り替えて翻訳を続けられます。</p>
+      <ol class="steps">
+        <li>
+          <p><strong>C-1 と C-2 の両方を済ませる</strong></p>
+          <p class="why">「使う AI」を切り替えながら、それぞれ設定します。モデルなどの設定は、両方とも別々に保存されます。</p>
+        </li>
+        <li>
+          <p><strong>「使う AI（主に使う方）」で、普段使う方を選ぶ</strong></p>
+          <p class="why">たとえば「Gemini API」。こちらが先に使われ、使えないときだけ、もう一方に切り替わります。</p>
+        </li>
+        <li>
+          <p><strong>「上限・エラーのときは、もう一方の AI に切り替える」にチェックを入れ、保存する</strong></p>
+          <p class="why">チェックの下に、切り替え先の準備ができているか（サインイン済みか、APIキーがあるか）が表示されます。<strong>切り替わったとき、翻訳する文章はもう一方の会社にも送られます</strong>（既定ではオフです）。</p>
+        </li>
+      </ol>
+      <div class="callout info">
+        <span class="ttl">切り替わる条件と、元に戻る仕組み</span>
+        <ul>
+          <li>主の AI の<strong>モデル（主・予備）がすべて使えない</strong>ときに切り替わります（1 日の上限、混雑・エラー、応答がない、APIキーやサインインの問題など）。依頼の内容そのものの問題では切り替えません。</li>
+          <li><strong>1 日の上限に達したモデルは、約 30 分、試さずに</strong>切り替え先を使います（毎回、無駄な依頼をしないため）。時間が経つと、自動で元の AI に戻ります。この記録は、ブラウザを閉じると消えます。</li>
+          <li>どちらの AI で翻訳したかは、<strong>ページ右下の枠</strong>（「モデル: Gemini / …」）で確認できます。切り替わると、使ったモデルが並びます。</li>
+          <li>切り替え先の ChatGPT のモデルが未選択のときは、取得済みの一覧から、翻訳向きの軽量なものが自動で選ばれます。</li>
+        </ul>
+      </div>
+
+      <h3>D. （おすすめ）ツールバーにアイコンを固定する</h3>
+      <p>ブラウザ右上のパズルのピースのアイコンを押し、この拡張機能の「ピン」を押すと、いつでもアイコンが見える状態になります。アイコンを押すだけでページ翻訳を開始・解除できます。</p>
+
+      <h3>E. 新しいバージョンに更新する</h3>
+      <p>この拡張機能は<strong>自動では更新されません</strong>。配布元から新しい zip を受け取ったら、次のどちらかで入れ替えます。</p>
+      <ul>
+        <li><strong>同じフォルダに上書きする（おすすめ）</strong>：新しい zip の <code>extension</code> フォルダの中身を、今使っているフォルダに上書きコピーし、管理ページで「再読み込み」を押します。設定はそのまま引き継がれます。</li>
+        <li><strong>入れ直す</strong>：古い拡張機能を管理ページで「削除」し、新しいフォルダを読み込みます。この場合、設定とキーは消えるので、キーを再入力します。</li>
+      </ul>
+
+      <h3>F. 使うのをやめるとき</h3>
+      <ol>
+        <li>設定画面の「<strong>APIキーを削除</strong>」を押します（ブラウザ内のキーが消えます）。ChatGPT を使っていた場合は、「<strong>サインアウト</strong>」を押します（ブラウザ内のサインイン情報が消えます）。</li>
+        <li>管理ページで、この拡張機能を「削除」します。</li>
+        <li>念のため、Google AI Studio の APIキーのページで、<strong>キー自体も削除</strong>します（これが最も確実です）。ChatGPT を使っていた場合は、ChatGPT の設定にある接続（連携）の管理から、この拡張機能の接続を解除します。</li>
+      </ol>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="usage">
+      <h2><span class="no">5</span>使い方</h2>
+      <p class="sub">操作は 3 通りです。どれも「押したときだけ」動きます。</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>やりたいこと</th><th>操作</th><th>結果</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>ページ全体を日本語にする</td>
+              <td>ページ上で右クリック →<br><strong>「このページを日本語に翻訳 / 元に戻す」</strong></td>
+              <td>画面に見えている部分から順に、文字が日本語に置き換わります。もう一度同じ項目を選ぶと原文に戻ります。</td>
+            </tr>
+            <tr>
+              <td>選んだ文章だけ訳す</td>
+              <td>文字列をドラッグで選択 → 右クリック →<br><strong>「選択範囲を日本語に翻訳」</strong></td>
+              <td>選択した場所の近くに訳文の小さなパネルが出ます。「コピー」で訳文をコピーでき、<kbd>Esc</kbd> か「閉じる」で消えます。</td>
+            </tr>
+            <tr>
+              <td>アイコンで操作する</td>
+              <td>ツールバーの拡張機能アイコンをクリック</td>
+              <td>ページ翻訳の開始・解除（右クリックのメニューと同じ）。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>画面右下の枠の意味</h3>
+      <p>枠の本文の下に、小さく「<strong>モデル: Gemini / gemini-3.5-flash-lite</strong>」のように、<strong>実際に翻訳したモデル</strong>が表示されます。併用で途中から別の AI に切り替わったときは、「モデル: Gemini / …、ChatGPT / …」のように、使ったモデルが並びます。保存済みの翻訳（キャッシュ）だけで表示したときは、「保存済みの翻訳を再利用」と出ます。選択範囲の翻訳のパネルにも、同じように使ったモデルが出ます。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>表示</th><th>意味</th></tr></thead>
+          <tbody>
+            <tr><td>翻訳中… 12/40</td><td>40 か所のうち 12 か所を翻訳し終えたところです。</td></tr>
+            <tr><td>日本語に翻訳済み（スクロールで続きも翻訳します）</td><td>今見えている範囲は完了です。下にスクロールすると、続きを自動で翻訳します。</td></tr>
+            <tr><td>赤い枠のメッセージ ＋「再試行」「原文に戻す」</td><td>エラーです。内容は「<a href="#trouble">困ったとき</a>」で確認できます。「再試行」で続きから再開できます。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout info">
+        <span class="ttl">長いページでの使い方のコツ</span>
+        ページ全体を一度に訳すのではなく、「見えている範囲とその少し先」だけを訳す作りです。これは速さのためだけでなく、無料枠を節約し、意図しない大量送信を防ぐための仕組みでもあります。最後までスクロールすれば、全体が日本語になります。
+      </div>
+
+      <h3 id="settings">設定画面の見方</h3>
+      <p>設定画面は、拡張機能の管理ページでこの拡張機能の「詳細」→「拡張機能のオプション」から開けます（初回は自動で開きます）。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>項目</th><th>意味</th></tr></thead>
+          <tbody>
+            <tr><td>上記を理解しました</td><td>注意事項を読んだことの確認です。チェックを入れて保存するまで、翻訳は動きません。</td></tr>
+            <tr><td>使う AI（主に使う方）</td><td>翻訳を頼む相手を選びます。「Gemini API」（Google の無料枠）か、「ChatGPT のプラン」（ご契約のプランの利用枠）です。選んだ方に合わせて、下の欄が切り替わります。</td></tr>
+            <tr><td>上限・エラーのときは、もう一方の AI に切り替える</td><td>併用の設定です。オンにすると、主の AI が使えないときだけ、もう一方で翻訳を続けます。下に、切り替え先の準備の状態が出ます。オンにすると、切り替わったときに、もう一方の会社にも文章が送られます。</td></tr>
+            <tr><td>速さを優先する（ChatGPT）</td><td>ChatGPT のモデルの「思考」を控えめにして、応答を速くします（既定でオン）。効果はモデルによります。OpenAI が受け付けない場合は、自動で外して送り直します。</td></tr>
+            <tr><td>Gemini APIキー</td><td>（Gemini を選んだとき）Google の AI を使うための「合鍵」です。入力欄は伏せ字で表示されます。</td></tr>
+            <tr><td>ChatGPT のサインイン</td><td>（ChatGPT を選んだとき）サインインの状態を表示します。「ChatGPT でサインイン」で OpenAI の画面が開き、承認すると戻ります。「サインインを中止」で待ち受けをやめ、「サインアウト」でこのブラウザのサインイン情報を消します。</td></tr>
+            <tr><td>このパソコンにキー・サインイン情報を保存しておく</td><td>オフにすると、ブラウザを閉じたときにキーやサインイン情報を忘れます（次回は再入力・再サインイン）。共用パソコン向けの設定です。切り替えると、保存済みのサインイン情報も、ディスクから一時領域へ（または、その逆へ）移ります。</td></tr>
+            <tr><td>モデル</td><td>翻訳を担当する AI の種類です。Gemini は Google から、ChatGPT はあなたのアカウントが使えるものを OpenAI から取得した一覧が並びます。「その他（モデル名を手入力）」で直接入力もできます。Gemini と ChatGPT で、選んだモデルは別々に記憶されます。</td></tr>
+            <tr><td>予備モデル</td><td>上のモデルが上限などで使えないときの代役です。「使わない」も選べます。</td></tr>
+            <tr><td>モデル一覧を更新</td><td>いま使えるモデルを取り直します（Gemini は先に APIキーの入力、ChatGPT は先にサインインが必要です）。</td></tr>
+            <tr><td>翻訳結果を…再利用する</td><td>一度訳した文を、サイトごとに保存して使い回す設定です。無料枠・利用枠の節約になるので、通常はオンのままにします。</td></tr>
+            <tr><td>保存</td><td>設定を保存します。</td></tr>
+            <tr><td>応答速度を診断</td><td>複数のモデルに短い依頼を同時に送り、どのモデルが速いかを調べます（数十秒〜数分かかります）。「拡張機能の翻訳依頼と同じ内容」も測るため、「どのモデルでも遅い（相手側の混雑）」か「依頼の内容だけが遅い」かを見分けられます。</td></tr>
+            <tr><td>保存して接続テスト</td><td>保存したうえで、短い英文を実際に翻訳してみます。緑の文字で訳文が出れば、キー（またはサインイン）とモデルが正しく使えています。併用がオンでも、<strong>いま表示している AI だけ</strong>で確かめます。所要時間の内訳（応答待ち・再試行の待機・依頼ごとの結果・トークン数。ChatGPT は、応答の頭・最初の文字まで）も表示されます。</td></tr>
+            <tr><td>キャッシュを削除</td><td>保存してある翻訳結果をすべて消します。</td></tr>
+            <tr><td>APIキーを削除</td><td>（Gemini を選んだとき）このブラウザに保存されているキーを消します（ブラウザの保存領域から完全に削除します）。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="models">モデルの選び方</h3>
+      <div class="callout info">
+        <span class="ttl">ChatGPT のプランを選んだ場合</span>
+        モデルの一覧は、サインインしたアカウントで実際に使えるものが、自動で取得されます（固定の候補はありません）。翻訳には、名前に <code>mini</code> などが付く、軽量で速いモデルで十分です。大きなモデルは、品質が上がる場合もありますが、遅くなったり、プランの利用枠を多く使ったりします。迷ったら、自動で選ばれたもののままで構いません。
+      </div>
+      <p>以下は、<strong>Gemini API を選んだ場合</strong>の説明です。モデル名は <code>gemini-3.8-flash</code> のように「世代の数字 ＋ 系列」でできています。数字が大きいほど新しい世代です。系列は次の 3 種類です。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>系列</th><th>名前の目印</th><th>特徴</th><th>向いている場面</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="nw">Flash-Lite</td>
+              <td class="nw"><code>…-flash-lite</code></td>
+              <td>軽量・低コスト。速い傾向があります。</td>
+              <td>毎日の閲覧や、長めのページを気軽に訳したいとき。</td>
+            </tr>
+            <tr>
+              <td class="nw">Flash</td>
+              <td class="nw"><code>…-flash</code></td>
+              <td>標準的な高品質。</td>
+              <td>言い回しの自然さを重視したい文章。</td>
+            </tr>
+            <tr>
+              <td class="nw">Pro</td>
+              <td class="nw"><code>…-pro</code></td>
+              <td>高性能。無料枠がない場合があります。</td>
+              <td>選んでエラーになる場合は、Flash 系か Flash-Lite 系に戻してください。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout info">
+        <span class="ttl">おすすめの組み合わせ（例）</span>
+        <ul>
+          <li>初期設定（標準）：モデル <code>gemini-3.5-flash-lite</code>、予備モデル <code>gemini-3.8-flash</code></li>
+          <li>品質重視：モデルに新しい Flash 系、予備モデルに Flash-Lite 系</li>
+        </ul>
+        一覧に表示されているものから選んでください。無料枠の回数制限は<strong>モデルごとに別</strong>で、<strong>差が非常に大きい</strong>ことがあります。たとえば、ある時点の AI Studio では、新しい Flash 系が「1 日 20 回・1 分 5 回」まで、Flash-Lite 系が「1 日 500 回・1 分 15 回」まで、と表示されていました（数値は時期やアカウントで変わります）。ページの翻訳は 1 ページで数回の依頼を使うため、<strong>1 日の回数が少ないモデルは、主モデルには向きません</strong>。系列や世代の違うモデルを「モデル」と「予備モデル」に組み合わせておくと、片方が上限に達しても翻訳を続けられます。具体的な回数は、AI Studio の「Rate limits」で確認できます。
+      </div>
+      <div class="callout warn">
+        <span class="ttl">Gemini 2.5 系について</span>
+        Google は 2026 年 9 月 18 日に、2.5 系のモデルの利用を「過去に使ったことのあるユーザーに限る」と告知しています（提供終了ではありません）。新しく作ったプロジェクト（キー）では、2.5 系が使えない場合があります。その場合は、3.x 系（3.5 Flash-Lite・3.8 Flash など）を選んでください。
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="money">
+      <h2><span class="no">6</span>お金と無料枠の話</h2>
+      <p class="sub">「ChatGPT などに月額契約しているのに、なぜ別に API の話が出るのか」を説明します。</p>
+
+      <div class="callout ok">
+        <span class="ttl">このバージョンから：ChatGPT の契約も使えます</span>
+        ChatGPT Plus / Pro などを契約している方は、APIキーなしで、その契約の利用枠を使って翻訳できます（設定画面の「使う AI」で「ChatGPT のプラン」を選び、サインインします）。契約がない方、または使いたくない方は、従来どおり Gemini の無料枠で使えます。下では、まず Gemini の無料枠の話を、そのあとに ChatGPT のプランの話をします。
+      </div>
+
+      <h3>サブスクと API は別会計</h3>
+      <div class="cards">
+        <div class="card">
+          <h4>🍽️ サブスク（月額）</h4>
+          <p>ChatGPT Plus・Claude Pro・Gemini の有料プランなど。<strong>各社の公式アプリやサイトの中で</strong>AI と会話するための料金です。レストランの「店内食べ放題プラン」にあたります。</p>
+        </div>
+        <div class="card">
+          <h4>🛵 API（従量課金）</h4>
+          <p>自作のアプリや拡張機能が、<strong>外から AI に仕事を頼む</strong>ための窓口です。「出前注文」にあたり、食べ放題プランとは別会計です。</p>
+        </div>
+      </div>
+      <p>そのため、一般には、サブスクに入っていても、自作の拡張機能から使うには API の利用枠が別に必要です。ただし <strong>Google の Gemini API には「無料枠」</strong>があり、一定の回数までは料金がかかりません。この拡張機能は、その無料枠だけを使う前提で作っています。サブスクへの加入は不要です。さらに、<strong>OpenAI は「Sign in with ChatGPT」という仕組みで、ChatGPT のプランの利用枠をアプリから使えるようにしています</strong>。この拡張機能は、その仕組みにも対応しました（次の「ChatGPT のプランで使うとき」を参照）。</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>項目</th><th>この拡張機能での扱い</th></tr></thead>
+          <tbody>
+            <tr><td>追加料金</td><td>無料枠の範囲なら 0 円です。</td></tr>
+            <tr><td>上限を超えたら</td><td>支払い方法を登録していなければ、有料プランには切り替わりません。「上限に達しました」とエラーになるだけで、時間が経てば回復します。</td></tr>
+            <tr><td>回数の上限</td><td>モデルごとに「1 分あたり」「1 日あたり」の上限が決まっています。具体的な数値は、Google AI Studio の「Rate limits」画面で確認できます。</td></tr>
+            <tr><td>やってはいけないこと</td><td>Google AI Studio / Google Cloud で「請求先アカウント（支払い方法）」を登録すること。有料プランになり、使った分だけ請求される可能性があります。万一キーが漏れた場合の被害も大きくなります。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warn">
+        <span class="ttl">Google の利用規約についての注意</span>
+        Google の「Gemini API 追加利用規約」には、次の内容が書かれています。ご自身でも<a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">原文</a>を確認してください。
+        <ul>
+          <li><strong>EEA（欧州経済領域）・スイス・英国</strong>：これらの地域のユーザーに API クライアントを提供する場合は、有料サービスのみを使うこととされています。無料枠を前提とするこの拡張機能は、これらの地域の方には使えない可能性があります（この場合、本書の「請求先を登録しない」は当てはまりません）。</li>
+          <li><strong>年齢</strong>：18 歳以上が対象です。</li>
+          <li><strong>用途</strong>：開発者が業務目的で使うことを想定しており、一般消費者としての利用は想定外とされています。</li>
+        </ul>
+        規約は変更されることがあります。この拡張機能の作者は、規約への適合を保証しません。
+      </div>
+
+      <h3>ChatGPT のプランで使うとき</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>項目</th><th>この拡張機能での扱い</th></tr></thead>
+          <tbody>
+            <tr><td>追加料金</td><td>この拡張機能が、API の料金を請求することはありません。使った分は、ご契約のプランの利用枠から差し引かれます。</td></tr>
+            <tr><td>上限を超えたら</td><td>「利用枠に達しました」とエラーになるだけで、自動で課金されることはありません。時間が経つか、プランの利用枠が回復すれば再開できます。予備モデルを設定していれば、そちらも試します。</td></tr>
+            <tr><td>利用枠の分け合い</td><td>ChatGPT 本体や Codex など、同じプランの他の使い方と利用枠を分け合います。翻訳を多用すると、ChatGPT 本体の残りが減ります。</td></tr>
+            <tr><td>残りの確認</td><td>ChatGPT の「設定 → 使用状況」で確認できます。</td></tr>
+            <tr><td>やってはいけないこと</td><td>他の人に、自分のサインイン情報（この拡張機能を入れたブラウザ）を使わせること。他人のアカウントでのサインインを借りること。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout warn">
+        <span class="ttl">OpenAI の規約についての注意</span>
+        この方法は、OpenAI の公式ドキュメント（<a href="https://developers.openai.com/siwc" target="_blank" rel="noopener noreferrer">Sign in with ChatGPT</a>）に書かれた手順に沿って実装しています。ただし、ドキュメントは「オープンソース・個人利用のアプリ」を想定して書かれており、<strong>ブラウザの拡張機能での利用については、許可も禁止も書かれていません</strong>。ご自身でも原文と利用規約を確認し、ご判断ください。仕様や規約が変わった場合は、使えなくなることがあります。
+      </div>
+
+      <h3>無料枠を長持ちさせる 4 つの工夫</h3>
+      <div class="cards">
+        <div class="card"><h4>① まとめて送る</h4><p>無料枠は「依頼の回数」の制限が厳しいため、近くの文章を 1 回の依頼にまとめて送ります。</p></div>
+        <div class="card"><h4>② 見える範囲だけ</h4><p>画面外の文章は訳しません。読まない部分に枠を使わないためです。</p></div>
+        <div class="card"><h4>③ 同じ文は再利用</h4><p>一度訳した文は、このブラウザの中に記録しておき、同じサイトでは AI に頼まず再利用します。</p></div>
+        <div class="card"><h4>④ 予備のモデル</h4><p>片方のモデルの 1 日の上限に達したら、自動で別のモデルに切り替えます。上限はモデルごとに別だからです。</p></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="security">
+      <h2><span class="no">7</span>安全性とプライバシー</h2>
+      <p class="sub">特に「APIキーやサインイン情報が漏れないか」「勝手に使われないか」を中心に、何をしているか・何ができないかを正直にまとめます。</p>
+
+      <div class="callout warn">
+        <span class="ttl">最も大事な注意</span>
+        Gemini の無料枠では、送った文章が Google のサービス改善に使われたり、担当者が内容を確認したりする場合があるとされています。ChatGPT のプランで使う場合も、送った文章は OpenAI のサーバーで処理され、扱いは OpenAI の規約とご契約のプランの設定によります。
+        <strong>メール、社内文書、ログインが必要な個人ページ、個人情報や機密情報を含むページには使わない</strong>でください。公開されている記事や技術文書の翻訳に向いています。
+      </div>
+
+      <h3>7-1　外に送られるもの・送られないもの</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>送られる</th><th>送られない</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>
+                <ul>
+                  <li>翻訳する文章（ページ上の文字、タブのタイトル、選択した文字）</li>
+                  <li>文脈の参考（訳さない）：翻訳する部分の直前の見出し・文章（短い範囲）。入力欄・コードの中身は含みません</li>
+                  <li>【Gemini】APIキー（Google に「あなたの利用枠です」と示すため）</li>
+                  <li>【ChatGPT】サインインで得た「アクセストークン」（OpenAI に「あなたの利用枠です」と示すため）。サインイン時は、OpenAI が発行する一時的な確認コードと、確認用の値</li>
+                  <li>モデル一覧を取得するときの問い合わせ（鍵・トークンのみ。ページの内容は含みません）</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>ページの URL（アドレス）</li>
+                  <li>Cookie やログイン情報</li>
+                  <li>入力欄に打ち込んだ文字（入力欄やコード部分は、そもそも翻訳対象から除外しています）</li>
+                  <li>閲覧履歴</li>
+                  <li>ChatGPT のパスワード（OpenAI の画面にだけ入力します。この拡張機能には渡りません）</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>併用をオンにした場合</strong>は、主の AI が使えないときに、もう一方の会社にも同じ文章が送られます（使えた方にだけ送られ、両方に同時に送ることはありません）。併用は既定でオフです。</p>
+      <p>送信先は、選んだ AI の会社の次の宛先だけです。Gemini：<code>generativelanguage.googleapis.com</code>（Google）。ChatGPT：<code>api.openai.com</code>（翻訳・モデル一覧）と <code>auth.openai.com</code>（サインイン・トークンの更新）（OpenAI）。この拡張機能は、配布元のサーバーなど他の場所には何も送りません。そもそも、そのような通信ができないように作られています（7-4 を参照）。</p>
+
+      <h3>7-2　ブラウザの中に保存されるもの</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>内容</th><th>保存場所</th><th>注意</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>APIキー</td>
+              <td>このブラウザの内部の保存領域（ディスク上）。<br>「保存しておく」をオフにすると、メモリ上だけ（ブラウザを閉じると消える）。</td>
+              <td><strong>暗号化はされていません。</strong>パソコンを他の人が使える状態や、ウイルスに感染した状態では、読み取られるおそれがあります。ブラウザ間の同期にも含めていません。</td>
+            </tr>
+            <tr>
+              <td>ChatGPT のサインイン情報<br>（アクセストークン・更新用トークン・メールアドレス・登録 ID）</td>
+              <td>APIキーと同じ扱い。<br>「保存しておく」がオンならディスク上、オフならメモリ上だけ（ブラウザを閉じると消える）。</td>
+              <td><strong>暗号化はされていません。</strong>APIキーと同じ注意が必要です。アクセストークンは約 1 時間で期限が切れ、自動で更新されます。更新用トークンの有効期間は長めです（OpenAI の仕様）。使い終わったら「サインアウト」で消してください。</td>
+            </tr>
+            <tr>
+              <td>モデル名などの設定</td>
+              <td>同上</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>上限に達したモデルの記録（約 30 分）、ChatGPT のモデルごとの「受け付けた依頼の形」の記録</td>
+              <td>メモリ上だけ（ブラウザを閉じると消える）</td>
+              <td>併用のとき、無駄な依頼を減らすための一時的な記録です。文章・鍵は含みません。</td>
+            </tr>
+            <tr>
+              <td>翻訳結果のキャッシュ</td>
+              <td>同上</td>
+              <td>サイトごとに分けて保存。最大 3,000 件、1 件 400 文字までの短い文だけ。翻訳した文章がこのブラウザに残るため、気になる場合は設定画面の「キャッシュを削除」か、再利用のオフをお使いください。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>7-3　拡張機能がもっている権限（やさしい言い換え）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>権限の名前</th><th>何ができるか</th></tr></thead>
+          <tbody>
+            <tr><td><code>contextMenus</code></td><td>右クリックメニューに項目を追加する。</td></tr>
+            <tr><td><code>activeTab</code></td><td>あなたが右クリックやアイコンで操作した、そのタブに限って一時的に操作する。他のタブや、操作していないタブは触れません。</td></tr>
+            <tr><td><code>scripting</code></td><td>操作したタブに、翻訳用のプログラムを差し込む。</td></tr>
+            <tr><td><code>storage</code></td><td>設定・サインイン情報・キャッシュをブラウザ内に保存する。</td></tr>
+            <tr><td><code>webRequest</code></td><td>ChatGPT のサインインが終わって戻ってきたこと（アドレス <code>http://127.0.0.1:1455/auth/callback</code> への移動）を、<strong>見つけるだけ</strong>に使う。通信の書き換えや遮断はしません。見る対象は、そのアドレス 1 つだけです。</td></tr>
+            <tr><td><code>generativelanguage.googleapis.com</code></td><td>Gemini と通信する。</td></tr>
+            <tr><td><code>api.openai.com</code><br><code>auth.openai.com</code></td><td>ChatGPT のプランでの翻訳・モデル一覧の取得（api）と、サインイン・トークンの更新（auth）。</td></tr>
+            <tr><td><code>127.0.0.1:1455/auth/callback</code></td><td>サインインの戻り先（自分のパソコン内のアドレス）を見つけるための対象。ここと通信するのではなく、移動を検知するだけです。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>「すべてのサイトのデータを読み取る」といった広い権限や、閲覧履歴・Cookie・ダウンロードなどにアクセスする権限は持っていません。<code>webRequest</code> も、通信の内容を読んだり変えたりするためではなく、上の 1 つのアドレスへの移動を知るためだけに使っています（静的な監査で、書き換え系の機能がないことを確認しています）。</p>
+      <div class="callout ok">
+        <span class="ttl">勝手には動きません</span>
+        すべてのサイトを常時監視するような作りではありません。右クリックメニューかアイコンを押したときにだけ、そのタブで動き始めます。
+      </div>
+
+      <h3>7-4　鍵（APIキー・サインイン情報）を守る仕組み（図解）</h3>
+      <figure class="fig">
+        <svg viewBox="0 0 760 340" role="img" aria-label="APIキーとサインイン情報が入っている場所と、外部からのアクセスが遮断される様子を示す図">
+          <defs>
+            <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path class="head" d="M0 0L10 5L0 10z"/>
+            </marker>
+          </defs>
+          <rect class="zone" x="10" y="10" width="560" height="320" rx="14"/>
+          <text class="s" x="24" y="32">ブラウザの中</text>
+
+          <rect class="box ok" x="30" y="50" width="330" height="150" rx="10"/>
+          <text class="t" x="195" y="78" text-anchor="middle">信頼された領域（鍵がある場所）</text>
+          <text class="s" x="195" y="104" text-anchor="middle">設定画面 ・ 裏方（background.js）</text>
+          <text class="s" x="195" y="126" text-anchor="middle">APIキー・サインイン情報を読み書きできるのは、ここだけ</text>
+          <text class="s" x="195" y="148" text-anchor="middle">通信先は Gemini / OpenAI だけに固定（CSP）</text>
+          <text class="s" x="195" y="170" text-anchor="middle">保存領域は「信頼された領域」に限定</text>
+
+          <rect class="box" x="400" y="50" width="150" height="150" rx="10"/>
+          <text class="t" x="475" y="78" text-anchor="middle">Web ページ</text>
+          <text class="s" x="475" y="104" text-anchor="middle">（悪意があるかも）</text>
+          <text class="s" x="475" y="132" text-anchor="middle">content.js は</text>
+          <text class="s" x="475" y="152" text-anchor="middle">文字の置き換え係。</text>
+          <text class="s" x="475" y="172" text-anchor="middle">鍵は持たない</text>
+
+          <line class="stop" x1="380" y1="60" x2="380" y2="190"/>
+          <text class="stop-t" x="380" y="216" text-anchor="middle">✕ 鍵には触れない</text>
+
+          <rect class="box" x="30" y="240" width="330" height="70" rx="10"/>
+          <text class="t" x="195" y="268" text-anchor="middle">保存領域（鍵・設定・キャッシュ）</text>
+          <text class="s" x="195" y="290" text-anchor="middle">「忘れる」モードでは鍵はメモリ上だけ</text>
+          <line class="arrow" x1="195" y1="204" x2="195" y2="236" marker-start="url(#ah3)" marker-end="url(#ah3)"/>
+
+          <rect class="box accent" x="610" y="50" width="140" height="150" rx="10"/>
+          <text class="t" x="680" y="106" text-anchor="middle">Gemini</text>
+          <text class="t" x="680" y="128" text-anchor="middle">/ ChatGPT</text>
+          <text class="s" x="680" y="152" text-anchor="middle">Google / OpenAI の</text>
+          <text class="s" x="680" y="172" text-anchor="middle">サーバー</text>
+          <path class="arrow" d="M 300 48 C 300 14, 640 14, 680 46" marker-end="url(#ah3)"/>
+          <text class="l" x="480" y="30" text-anchor="middle">HTTPS（鍵はここへだけ送る）</text>
+        </svg>
+        <figcaption>図2　APIキー・サインイン情報は「信頼された領域」にだけあり、Web ページからは触れません</figcaption>
+      </figure>
+
+      <h3 id="threats">7-5　想定される危険と、その対策</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>危険</th><th>対策</th><th>残るリスク</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>悪意のある Web ページが、APIキーを盗もうとする</td>
+              <td>キーは設定画面と裏方だけが扱い、ページに差し込むスクリプトには渡しません。保存領域は「信頼された領域」だけに限定しています。ページの JavaScript はこの拡張機能を呼び出せません。</td>
+              <td>ブラウザ自体の脆弱性があれば防げません（ブラウザを最新に保つ）。</td>
+            </tr>
+            <tr>
+              <td>悪意のあるページが、翻訳を暴走させて無料枠を使い切らせる</td>
+              <td>3 段階の上限：①1 回の依頼のサイズ（30,000 文字まで）②1 回の翻訳開始で 150,000 文字まで ③10 分間で 200,000 文字・60 回まで。超えると自動で止まります。</td>
+              <td>上限内であれば、無料枠の一部は消費され得ます（お金は発生しません）。</td>
+            </tr>
+            <tr>
+              <td>ページ内の文章に、AI への偽の指示（プロンプトインジェクション）が仕込まれる</td>
+              <td>AI には、道具もキーも渡していません。出力は「文字」として表示するだけで、HTML として解釈しません。キャッシュはサイトごとに分け、あるページで操作された訳が別サイトに混ざらないようにしています。</td>
+              <td>そのページ上の訳文が、誤解を招く内容になる可能性は残ります（訳文を鵜呑みにしない）。</td>
+            </tr>
+            <tr>
+              <td>拡張機能が、勝手に別の場所へキーや文章を送る</td>
+              <td>画面・裏方の通信先を、Gemini（Google）と ChatGPT（OpenAI）の宛先だけに固定（CSP）。ブラウザが、それ以外への通信を遮断します。検査ツールで、通信先・権限を確かめられます。</td>
+              <td>配布物がすり替えられていた場合は別です（下の行）。</td>
+            </tr>
+            <tr>
+              <td>配布物がすり替えられる・改ざんされる</td>
+              <td>配布元から直接受け取り、SHA-256 を別の経路で照合します。コードは短く、外部の部品も使っていないため、目で確認できます（7-7）。</td>
+              <td>照合しなければ気づけません。出所の不確かなファイルは入れない。</td>
+            </tr>
+            <tr>
+              <td>他の拡張機能から、この拡張機能が操作される</td>
+              <td>外部から呼び出せる口を用意しておらず、呼び出し元も確認しています。他の拡張機能は、この拡張機能の保存領域を読めません。</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>パソコンに入ったウイルスや、他の利用者に、保存ファイルを読まれる</td>
+              <td>防げません。軽減策として、「キー・サインイン情報を保存しておく」をオフにする、共用パソコンでは使わない、使わなくなったらキーを削除（ChatGPT はサインアウト）する。</td>
+              <td><strong>残ります。</strong>ブラウザの保存領域は暗号化されていません。</td>
+            </tr>
+            <tr>
+              <td>画面共有・スクリーンショット・コピーからキーが漏れる</td>
+              <td>入力欄は伏せ字です。エラーメッセージにキーが混ざった場合も、伏せ字にして表示します。</td>
+              <td>貼り付け前のコピー内容などは、利用者の注意が必要です。</td>
+            </tr>
+            <tr>
+              <td>キーの貸し借り・共有による、無料枠の枯渇や責任の所在の曖昧化</td>
+              <td>キーは各自が無料で作れるため、貸し借りは不要です。説明書・設定画面で禁止を明記しています。</td>
+              <td>利用者の守る事項です。</td>
+            </tr>
+            <tr>
+              <td>意図しない有料請求</td>
+              <td>請求先アカウントを登録しない限り、有料プランにはなりません。</td>
+              <td>登録した場合は、キーの漏えいが金銭被害につながり得ます。登録しないでください。</td>
+            </tr>
+            <tr>
+              <td>ChatGPT のサインインの「確認コード」が、別のプログラムに横取りされる</td>
+              <td>サインインの戻り先は、自分のパソコン内のアドレス（<code>127.0.0.1</code>）です。コードを交換するには、サインインを始めたときに作った秘密の値（PKCE）が必要で、これは拡張機能の中にしかありません。さらに、戻ってきたコードが「自分の依頼のものか」を、毎回の使い捨ての値（state）で確かめ、一致しないものは無視します。応答の中の確認用の値（nonce）も照合します。</td>
+              <td>別のアプリが同じ番号（1455）で待ち受けていると、サインインが完了しないことがあります（安全面ではなく、動作面の問題です）。</td>
+            </tr>
+            <tr>
+              <td><code>webRequest</code> 権限が、通信の盗み見や書き換えに使われる</td>
+              <td>対象を戻り先のアドレス 1 つに限定し、通信を書き換え・遮断する機能は使っていません。静的な監査が、これらの書き方がないことを毎回確認します。</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>併用により、意図せず、もう一方の会社に文章が送られる</td>
+              <td>併用は既定でオフで、利用者が設定画面で明示的にオンにしたときだけ働きます。オンにするときの注意事項（もう一方の会社にも送信される）を、設定画面に表示します。切り替え先の準備（APIキー・サインイン）がなければ、切り替えません。</td>
+              <td>オンにした場合は、切り替わったときに、もう一方の会社に送られます。機密性のあるページには使わない。</td>
+            </tr>
+            <tr>
+              <td>ChatGPT の利用枠を、悪意のあるページが使い切らせる</td>
+              <td>Gemini と同じ 3 段階の上限（依頼のサイズ・1 回の翻訳開始・10 分間）が働きます。</td>
+              <td>上限内であれば、利用枠の一部は消費され得ます（ChatGPT 本体の残りに影響します）。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="leak">7-6　キー・サインイン情報が漏れたかも、と思ったら</h3>
+      <p><strong>ChatGPT を使っていた場合</strong>：設定画面の「サインアウト」を押し（このブラウザの情報が消えます）、続けて ChatGPT の設定にある接続（連携）の管理から、この拡張機能の接続を解除してください。心配なときは、ChatGPT のパスワードの変更と、すべての端末からのログアウトも行います。解除すると、この拡張機能のサインイン情報が以後使われないようにできます（アクセストークンの期限は約 1 時間です）。以下は、Gemini の APIキーの手順です。</p>
+      <ol class="steps">
+        <li><p><strong>Google 側でキーを削除する</strong></p><p class="why">Google AI Studio の APIキーのページで、該当のキーを削除します。削除すれば、そのキーは誰も使えなくなります。</p></li>
+        <li><p><strong>新しいキーを作り、設定画面で差し替える</strong></p><p class="why">以前のキーを使い続けないよう、必ず新しいものに入れ替えます。</p></li>
+        <li><p><strong>使われていないか確認する</strong></p><p class="why">AI Studio の利用状況の画面で、身に覚えのない使用がないか確認します。請求先を登録していた場合は、請求も確認してください。</p></li>
+        <li><p><strong>原因を振り返る</strong></p><p class="why">画面共有・スクリーンショット・メールなどに載せていないか、共用パソコンで使っていないかを確認します。</p></li>
+      </ol>
+
+      <h3 id="verify">7-7　どのように検証したか（と、保証できないこと）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>検証の方法</th><th>確認した内容</th><th>結果</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>静的な監査（19 項目）</td>
+              <td>権限・通信先（Gemini・OpenAI・戻り先の 1 つだけ）・CSP・通信（fetch）の場所と宛先・<code>webRequest</code> の使い方・新しいタブを開く場所・禁止されている書き方（eval、HTML 直接挿入、ログ出力）・不可視文字・URL・キーやトークンの埋め込み・開発用ファイルの混入・更新履歴とバージョンの一致。</td>
+              <td>全項目 合格</td>
+            </tr>
+            <tr>
+              <td>自動テスト（89 件）</td>
+              <td>翻訳の動作・文脈の受け取り（31 件）、安全装置（14 件）、ChatGPT のプラン（25 件）、併用・速さ優先・文脈（19 件）。文脈：形式の検査・長さの上限・区切り記号の除去、ChatGPT にも同じ形で添える、使用量に数える、など。併用：Gemini が上限のとき ChatGPT へ切り替わる、上限に達したモデルを一定時間飛ばす・期限が過ぎたら戻る、併用オフでは切り替えない、キー無効でも切り替える、両方の理由を返す、「接続テスト」はページから指定できない、など。安全装置：不正な依頼の拒否、使用量の上限、キーの伏せ字、呼び出し元の確認、「忘れる」モード、キャッシュのサイト別分離、保存領域のアクセス制限、通信先の固定、など。ChatGPT：サインインの手順（PKCE・state・nonce の照合）、トークンの更新（同時でも 1 回）、利用枠の上限の案内、トークンが URL・エラー文に出ないこと、設定画面だけが操作できること、保存先の切り替え、など。</td>
+              <td>全件 合格</td>
+            </tr>
+            <tr>
+              <td>実ブラウザでの読み込み検証（15 項目）</td>
+              <td>Brave・Chrome（いずれも Chromium 155）に実際に読み込み、設定が受理されること、画面や裏方から許可した宛先以外への通信がブロックされ、OpenAI への通信は許可されていること、スクリプトの差し込みが実行されないこと、「忘れる」モードでキーがディスク側に書かれないこと、キーの削除を確認。Edge は、0.4.0 までの版で確認済みです（0.5.0 では未実施）。</td>
+              <td>Brave・Chrome とも 全項目 合格</td>
+            </tr>
+            <tr>
+              <td>実ブラウザでの ChatGPT サインイン・併用の検証（24 項目）</td>
+              <td>OpenAI への通信（と、併用の検証での Gemini の「上限に達した」応答）だけを偽物に差し替え、本物のブラウザで一連の流れを確認：認可画面の開始 → 戻り先の移動を検知 → トークンの交換 → モデル一覧 → 翻訳 → 保存先の切り替え → サインアウト、state が違う戻り先の無視、中止、併用での切り替えと一定時間の記録。（Brave・Chrome で確認。Edge は 0.4.0 までで確認済み）</td>
+              <td>Brave・Chrome とも 全項目 合格</td>
+            </tr>
+            <tr>
+              <td>依頼の区切り・文脈の検証（14 項目）</td>
+              <td>実ブラウザの DOM 上で、段落の途中で区切らない、見出しは直後の本文と同じ依頼に入る、すべての断片が文書順に 1 回ずつ送られる、文脈（タイトル・直前の見出し・直前の文章）が原文で入る（すでに訳した部分も）、入力欄・コード・編集可能な部分は文脈にも含まれない。わざと旧方式に戻すと、4 項目が失敗することも確認。実際の Wikipedia・AWS ドキュメントでは、依頼をまたいで分かれた段落が 10 個 → 0 個、依頼回数は同じか 1 回増える程度。</td>
+              <td>合格</td>
+            </tr>
+            <tr>
+              <td>右下の枠・パネルの表示の検証（6 項目）</td>
+              <td>使ったモデルの表示（1 つ・併用で複数・保存済みの翻訳だけ）、「元に戻す」で枠が消えること、選択範囲のパネルへの表示。</td>
+              <td>合格</td>
+            </tr>
+            <tr>
+              <td>ページ内動作の検証</td>
+              <td>実ブラウザの DOM 上で、翻訳対象の選別・遅延翻訳・動的な追加・元に戻す・エラー表示・大量生成時の自動停止（約 20 万文字の生成に対し、約 15 万文字で停止）。</td>
+              <td>合格</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warn">
+        <span class="ttl">保証できないこと</span>
+        <ul>
+          <li>これらは作成者による<strong>自己検証</strong>であり、第三者の専門家による監査ではありません。</li>
+          <li>検証は Windows 上で行いました。Mac・Linux での確認はしていません。</li>
+          <li>パソコン自体が危険な状態（ウイルス感染、他人が自由に使える等）の場合は、APIキーやサインイン情報を守りきれません。</li>
+          <li>Google・OpenAI 側のデータの扱い（学習への利用など）は、各社の規約に従います。この拡張機能では制御できません。</li>
+          <li>ChatGPT のプランでの利用は、OpenAI の公式ドキュメントが想定していない形（ブラウザの拡張機能）です。自動テストと実ブラウザの検証は、OpenAI の応答を模擬して行っており、実際の OpenAI との通信（サインイン・翻訳・トークンの自動更新）は、OpenAI 側の仕様や状況によって結果が変わり得ます。うまくいかないときは、Gemini API に切り替えてお使いください。</li>
+          <li><strong>翻訳の「質」が上がったかどうかは、まだ測っていません。</strong>0.5.0 の区切り・文脈の工夫は、動作（段落の途中で区切らない・文脈が正しく添わる）を実ブラウザで確認していますが、実際の Gemini・ChatGPT での訳の良し悪しは、比較ツール（<code>ab-quality.mjs</code>）で、ご自身の APIキーを使って確かめる必要があります。</li>
+          <li>将来のブラウザや Google・OpenAI の API の変更で、動作しなくなる可能性があります。</li>
+        </ul>
+      </div>
+
+      <h3>技術に詳しい方へ：自分で確かめるには</h3>
+      <p>コードは全部で約 2,000 行（うち JavaScript は約 1,800 行）で、外部の部品も難読化もなく、そのまま読めます。次の点を確認すれば、主要な安全性は目で確かめられます。</p>
+      <ul>
+        <li><code>manifest.json</code> の <code>permissions</code> が 5 つ（<code>contextMenus</code>・<code>activeTab</code>・<code>scripting</code>・<code>storage</code>・<code>webRequest</code>）だけで、<code>host_permissions</code> が Gemini・OpenAI の API とサインイン・戻り先の 1 つ（<code>http://127.0.0.1:1455/auth/callback*</code>）だけであること。</li>
+        <li><code>content_security_policy</code> の <code>connect-src</code> が、Gemini・OpenAI の 3 つのホストだけで、<code>unsafe-eval</code> などがないこと。<code>externally_connectable</code> と <code>web_accessible_resources</code> がないこと。</li>
+        <li>全ファイルで <code>fetch</code> を検索し、<code>background.js</code> の 2 か所（Gemini の翻訳・モデル一覧）と、<code>chatgpt.js</code> の 3 か所（トークン・翻訳・モデル一覧）だけであること。</li>
+        <li>全ファイルで <code>http</code> を検索し、Gemini・OpenAI・AI Studio のリンクと、戻り先（<code>127.0.0.1:1455</code>）以外の宛先がないこと。</li>
+        <li><code>webRequest</code> の使い方が、<code>background.js</code> の <code>onBeforeRequest</code> 1 か所（戻り先のアドレス 1 つの観測）だけで、通信を変える機能（<code>blocking</code> など）がないこと。</li>
+        <li>管理ページの「詳細」で、ブラウザが表示する権限が、本書 7-3 と一致すること。</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="trouble">
+      <h2><span class="no">8</span>困ったとき</h2>
+      <p class="sub">症状から探してください。</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>症状・表示</th><th>考えられる原因</th><th>対処</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>右クリックにメニューが出ない</td>
+              <td>拡張機能がオフ。または読み込み前から開いていたページ。</td>
+              <td>管理ページでオンになっているか確認し、ページを再読み込み（<kbd>F5</kbd>）してください。</td>
+            </tr>
+            <tr>
+              <td>押したら設定画面が開いた</td>
+              <td>APIキーが未設定（ChatGPT の場合は未サインイン）、または「上記を理解しました」が未チェックです。</td>
+              <td>設定画面でキーを入力（またはサインイン）し、チェックを入れて保存してください。</td>
+            </tr>
+            <tr>
+              <td>「初回の確認がまだ済んでいません」</td>
+              <td>設定画面の注意事項を、まだ確認していません。</td>
+              <td>「上記を理解しました」にチェックを入れて保存してください。</td>
+            </tr>
+            <tr>
+              <td>右下の枠が「モデル: ChatGPT / …」になっている（Gemini を選んでいるのに）</td>
+              <td>併用がオンで、Gemini が上限・エラーのため、ChatGPT に切り替わりました。1 日の上限に達したときは、約 30 分、Gemini を試さずに ChatGPT を使います。</td>
+              <td>仕様です。Gemini だけを使いたいときは、設定画面で併用のチェックを外してください。Gemini が使えない理由は、「保存して接続テスト」（Gemini を表示した状態）で確認できます。</td>
+            </tr>
+            <tr>
+              <td>両方の理由が並んだエラー（「Gemini: …」「ChatGPT: …」）</td>
+              <td>併用がオンで、両方の AI が使えませんでした。</td>
+              <td>それぞれの理由に従って対処してください（上限なら、時間を置くか、回復を待ちます）。</td>
+            </tr>
+            <tr>
+              <td>ChatGPT の翻訳が遅い</td>
+              <td>モデルが「考える」時間や、混雑が考えられます。</td>
+              <td>設定画面を「ChatGPT のプラン」にして「保存して接続テスト」を押すと、内訳に「応答の頭まで」「最初の文字まで」の時間と「思考」のトークン数が出ます。<strong>最初の文字までが長い</strong>なら、モデルの思考か混雑です。「速さを優先する」がオンか確認し、名前に <code>mini</code> などが付く軽量なモデルを試してください。<strong>思考が多い</strong>のに速くならない場合は、「応答速度を診断」で、速いモデルがあるか調べられます。併用なら、通常は Gemini を主にして、ChatGPT を切り替え先にすると、普段の待ちを減らせます。</td>
+            </tr>
+            <tr>
+              <td>「ChatGPT にサインインしていません」</td>
+              <td>「ChatGPT のプラン」を選んでいるが、サインインしていない（または、サインアウトした／ブラウザを閉じて「忘れる」設定で消えた）。</td>
+              <td>設定画面で「ChatGPT でサインイン」を押してください。</td>
+            </tr>
+            <tr>
+              <td>サインインを押しても、いつまでも「サインイン待ち」のまま</td>
+              <td>開いた OpenAI のタブで、ログイン・承認が終わっていない。または、Codex など、別のアプリが同じ番号（1455）で待ち受けていて、戻り先をそちらが受け取った。</td>
+              <td>開いたタブで承認を済ませてください。進まないときは「サインインを中止」を押し、別のアプリを終了してから、もう一度お試しください。</td>
+            </tr>
+            <tr>
+              <td>「ChatGPT のサインインが無効になりました」／「サインインの有効期限が切れました」</td>
+              <td>アクセスが取り消された（ChatGPT 側で接続を解除した等）、または、長期間使わなかったためサインインの有効期限が切れた。</td>
+              <td>設定画面で「ChatGPT でサインインし直す」を押してください。</td>
+            </tr>
+            <tr>
+              <td>「ChatGPT のプランの利用枠…に達しました」</td>
+              <td>プランの利用枠（アプリごとの上限、またはプラン全体の上限）に達しました。ChatGPT 本体や Codex の使用でも減ります。</td>
+              <td>ChatGPT の「設定 → 使用状況」で残りを確認し、回復を待つか、設定画面で「使う AI」を Gemini API に切り替えてください。</td>
+            </tr>
+            <tr>
+              <td>サインインしたのに、モデルが選べない・翻訳が「モデルが選ばれていません」になる</td>
+              <td>モデル一覧を取得できていない。</td>
+              <td>設定画面の「モデル一覧を更新」を押して、一覧から選び、「保存」してください。</td>
+            </tr>
+            <tr>
+              <td>アイコンに「×」が出た</td>
+              <td>そのページでは拡張機能が動けません（ブラウザの設定ページ、ストア、PDF ビューアなど）。</td>
+              <td>仕様です。通常の Web ページで使ってください。</td>
+            </tr>
+            <tr>
+              <td>「APIキーが無効です」</td>
+              <td>キーの貼り付けミス（一部が欠けた、余計な文字が入った）、または削除済み。</td>
+              <td>AI Studio でキーをコピーし直して保存してください。必要なら新しく作成します。</td>
+            </tr>
+            <tr>
+              <td>キーが消えている（再入力を求められる）</td>
+              <td>「このパソコンにキー・サインイン情報を保存しておく」をオフにしている場合、ブラウザを閉じるとキーやサインインを忘れます。</td>
+              <td>仕様です。毎回の入力が面倒なら、設定でオンにしてください（共用パソコンでは非推奨）。</td>
+            </tr>
+            <tr>
+              <td>「短時間に大量の翻訳が要求されたため、安全のため一時停止しました」</td>
+              <td>10 分間の使用量の上限に達しました。極端に長いページや、続けて何度も翻訳した場合に起こります。</td>
+              <td>数分待ってから「再試行」してください。見ていないタブで勝手に起きた場合は、そのページを閉じてください。</td>
+            </tr>
+            <tr>
+              <td>「このページは翻訳する量が多すぎるため、途中で止めました」</td>
+              <td>1 回の翻訳開始で送れる量（約 15 万文字）の上限に達しました。</td>
+              <td>続きは「再試行」で翻訳できます。ページが文字を生成し続けている場合は、翻訳を中止してください。</td>
+            </tr>
+            <tr>
+              <td>「無料枠のリクエスト制限に達しました」</td>
+              <td>短時間に依頼しすぎました（1 分あたりの上限）。</td>
+              <td>1〜2 分待って「再試行」を押してください。</td>
+            </tr>
+            <tr>
+              <td>「本日の無料枠を使い切りました」</td>
+              <td>1 日あたりの上限に達しました。</td>
+              <td>予備モデルに自動で切り替わります。それでも止まる場合は、日付が変わる（Google 側の基準）のを待つか、設定でモデルを変えてください。</td>
+            </tr>
+            <tr>
+              <td>「モデルが見つかりません」／「モデル名に使えない文字が含まれています」</td>
+              <td>モデル名の打ち間違い、Google 側での提供終了、または、そのキー（プロジェクト）では使えないモデルです（Gemini 2.5 系は、新しいプロジェクトでは使えない場合があります）。</td>
+              <td>設定画面の「モデル一覧を更新」を押し、一覧から選び直してください。</td>
+            </tr>
+            <tr>
+              <td>モデルの一覧が古い・増えない／「一覧を取得できませんでした」</td>
+              <td>APIキーが未保存か、通信に失敗したため、あらかじめ用意した候補（6 件）を表示しています。</td>
+              <td>APIキーを入力して「保存」し、「モデル一覧を更新」を押してください。「Google から取得した N 件を表示中」と出れば最新です。</td>
+            </tr>
+            <tr>
+              <td>モデルを変えたら、すぐにエラーになる</td>
+              <td>選んだモデルに無料枠がない（Pro 系など）か、回数の上限が小さい可能性があります。</td>
+              <td>Flash 系や Flash-Lite 系に戻してください。上限は AI Studio の「Rate limits」で確認できます。</td>
+            </tr>
+            <tr>
+              <td>「Google（ChatGPT）の応答が … 秒以内に返らなかったため、待つのをやめました」</td>
+              <td>相手の応答が、入力量に応じた時間（約 2〜3 分）を超えても返りませんでした。モデルの混雑などが考えられます。</td>
+              <td>予備モデルに自動で切り替えています。すべてのモデルで出る場合は、時間を置いて「再試行」してください。</td>
+            </tr>
+            <tr>
+              <td>通信に失敗しました</td>
+              <td>インターネットに接続できていない、または会社・学校のネットワークで通信が制限されています。</td>
+              <td>接続を確認してください。</td>
+            </tr>
+            <tr>
+              <td>接続テストや翻訳に時間がかかる</td>
+              <td>多くの場合、Google 側のモデルの処理時間（混雑・思考）か、無料枠の制限による待機です。内訳に「Google サーバー処理」が全体に近い時間で表示されていれば、Google のサーバー内での待ちで、拡張機能やブラウザは無関係です。新しいモデルの公開直後などは、Google 側が混み合うことがあります。ネットワークや拡張機能自体の問題であることは少なめです。</td>
+              <td>設定画面の「保存して接続テスト」の結果に、時間の内訳（Google の応答待ち／再試行のための待機／依頼ごとの結果と Google のサーバー処理時間／トークン数）が表示されます。<strong>待機が多い</strong>場合は、時間を置くか、予備モデルを別の系統にします。<strong>応答待ちが長い</strong>場合は、「思考」のトークン数が多ければ Flash-Lite 系のモデルへ、少なければ Google 側の混雑です。設定画面の「応答速度を診断」で、速いモデルがあるか調べられます。</td>
+            </tr>
+            <tr>
+              <td>一部だけ訳されない</td>
+              <td>まだ画面の近くに来ていない / 日本語の文 / コード / <code>iframe</code>（ページ内の別ページ）の中など。</td>
+              <td>スクロールすると訳されます。対象外のものは「<a href="#limits">できないこと</a>」を見てください。</td>
+            </tr>
+            <tr>
+              <td>訳が不自然・ぎこちない</td>
+              <td>1 文がリンクや太字で細かく分かれているページでは、文脈がつながりにくいことがあります（段落の境目で区切る・文脈を添える工夫をしていますが、完全ではありません）。</td>
+              <td>その部分を選択して「選択範囲を日本語に翻訳」を使うと、自然な訳になりやすいです。設定でモデルを Flash 系に変えるのも手です。</td>
+            </tr>
+            <tr>
+              <td>レイアウトが崩れた</td>
+              <td>日本語の長さが原文と違うため、幅の狭い部分で折り返しが変わることがあります。</td>
+              <td>「原文に戻す」を選ぶか、ページを再読み込みしてください。</td>
+            </tr>
+            <tr>
+              <td>フォルダを動かしたら動かなくなった</td>
+              <td>拡張機能は読み込んだフォルダを直接参照しています。</td>
+              <td>管理ページで一度削除し、「<a href="#install">使えるようにする</a>」の手順 B から読み込み直してください（設定とキーは再入力になります）。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="stack">
+      <h2><span class="no">9</span>使っている技術</h2>
+      <p class="sub">ここからは「中身」の話です。専門用語には、その場で説明をつけています。</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>技術</th><th>この拡張機能での役割</th><th>やさしい説明</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Chrome 拡張機能<br>（Manifest V3）</td>
+              <td>全体の土台。右クリックメニューへの追加、ページへのプログラム差し込みなどを行う。</td>
+              <td>ブラウザに「後付けできるミニアプリ」の公式な仕組みです。Brave・Edge は Chrome と同じ土台（Chromium）なので、同じものがそのまま動きます。「Manifest V3」はその現行の規格の名前です。</td>
+            </tr>
+            <tr>
+              <td>JavaScript<br>（ライブラリなし）</td>
+              <td>すべての処理のプログラム言語。</td>
+              <td>Web ページを動かすための標準的な言語です。外部の部品（ライブラリ）や変換作業は使っていないので、ファイルのままブラウザに読み込めます。他人の部品が混ざらない分、中身を確認しやすくなっています。</td>
+            </tr>
+            <tr>
+              <td>Gemini API<br>（<code>generateContent</code>）</td>
+              <td>翻訳そのもの。</td>
+              <td>Google の AI に、インターネット経由（HTTPS）で「この文章を日本語に」と依頼し、結果を受け取る窓口です。APIキーは、通信の「ヘッダー」（宛先ラベルのような部分）に入れて送り、アドレス（URL）には載せません。</td>
+            </tr>
+            <tr>
+              <td>Gemini Models API<br>（モデル一覧）</td>
+              <td>設定画面のモデル欄に出す一覧の取得。</td>
+              <td>「あなたのキーで使えるモデルは何か」を Google に問い合わせる窓口です。結果から、翻訳に使える種類だけを選び、新しい世代の順に並べます。</td>
+            </tr>
+            <tr>
+              <td>Sign in with ChatGPT<br>（OAuth 2.0 ＋ PKCE）</td>
+              <td>ChatGPT アカウントでのサインインと、利用枠を使うための「アクセストークン」の取得・更新。</td>
+              <td>パスワードを渡さずに、「このアプリに、私の利用枠を使わせてよい」と OpenAI に承認する仕組みです。OpenAI の画面で承認すると、確認コードが戻ってきて、拡張機能がそれをトークン（一時的な利用許可証）に交換します。PKCE は、確認コードを途中で横取りされても悪用できないようにする追加の仕組みです。</td>
+            </tr>
+            <tr>
+              <td>OpenAI Responses API<br>（<code>/v1/responses</code>）</td>
+              <td>ChatGPT のプランでの翻訳そのもの。モデル一覧（<code>/v1/models</code>）の取得。</td>
+              <td>OpenAI の AI に、インターネット経由（HTTPS）で依頼する窓口です。回答は少しずつ届く（ストリーミング）形式で受け取り、文章をつなげます。トークンは通信の「ヘッダー」に入れて送り、アドレス（URL）には載せません。</td>
+            </tr>
+            <tr>
+              <td><code>chrome.webRequest</code></td>
+              <td>サインインが終わって戻ってきたことを検知する（戻り先のアドレス 1 つだけ）。</td>
+              <td>公式の手順では、自分のパソコン内で待ち受けるプログラムが戻り先を受け取ります。拡張機能は待ち受けができないため、ブラウザがそのアドレスへ移動したことを「見つける」だけにして、確認コードを取り出します。通信そのものは変えません。</td>
+            </tr>
+            <tr>
+              <td>AI モデル<br><code>gemini-3.5-flash-lite</code>（初期設定）<br><code>gemini-3.8-flash</code>（初期設定の予備）</td>
+              <td>翻訳を担当する AI の種類。</td>
+              <td>「モデル」は AI の機種のようなものです。「Flash-Lite」は軽くて速く、費用も低い系列で、翻訳のような用途に向いています。設定画面で変更できます。</td>
+            </tr>
+            <tr>
+              <td><code>chrome.storage</code><br>（local / session）</td>
+              <td>APIキー・サインイン情報・設定・翻訳キャッシュの保存。</td>
+              <td>ブラウザが拡張機能に用意している「専用の保存場所」です。他のサイトや他の拡張機能からは見えません。<code>local</code> はディスクに残り、<code>session</code> はブラウザを閉じると消えます。</td>
+            </tr>
+            <tr>
+              <td>CSP<br>（コンテンツ・セキュリティ・ポリシー）</td>
+              <td>画面・裏方の通信先を Gemini・OpenAI の宛先だけに固定し、外部スクリプトの実行を禁止する。</td>
+              <td>「このプログラムは、ここにしか通信してはいけない」とブラウザに宣言する仕組みです。宣言に反する通信は、ブラウザが遮断します。</td>
+            </tr>
+            <tr>
+              <td>DOM API<br>（TreeWalker など）</td>
+              <td>ページの中から「文字の部分」だけを探し出して、書き換える。</td>
+              <td>DOM は、Web ページの構造をプログラムから触るための仕組みです。文字だけを置き換えるので、ボタンやリンクの機能は壊れません。</td>
+            </tr>
+            <tr>
+              <td>IntersectionObserver</td>
+              <td>「その文字が画面に近づいたか」を検知して、近づいたものだけ翻訳する。</td>
+              <td>画面に入ったことを知らせてくれるブラウザの標準機能です。無料枠を節約する要になっています。</td>
+            </tr>
+            <tr>
+              <td>MutationObserver</td>
+              <td>翻訳中にページが変化したことを検知して、追加された文章も翻訳する。</td>
+              <td>ページの内容が書き換わったことを知らせてくれる標準機能です。後から表示されるコメント欄や、動的に更新されるページに対応するために使っています。</td>
+            </tr>
+            <tr>
+              <td>Shadow DOM</td>
+              <td>右下のバッジや訳文パネルの表示。</td>
+              <td>ページ側のデザイン指定の影響を受けない「専用の箱」の中に部品を置く技術です。どのサイトでも同じ見た目で表示されます。</td>
+            </tr>
+            <tr>
+              <td>HTML / CSS</td>
+              <td>設定画面と、この説明書。</td>
+              <td>Web ページの骨組みと見た目を決める標準の言語です。ライト／ダークの表示は、お使いのパソコン・ブラウザの設定に合わせて切り替わります。</td>
+            </tr>
+            <tr>
+              <td>Node.js・PowerShell<br>（開発・配布時のみ）</td>
+              <td>自動テスト、安全の監査、配布用 zip と SHA-256 の作成。</td>
+              <td>利用者には不要です。作る側が「修正して壊れていないか」「危険な書き方が入っていないか」を確かめるためだけに使います。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout ok">
+        <span class="ttl">使っていないもの</span>
+        専用のサーバー、会員登録、広告、アクセス解析、外部の部品（ライブラリ）は使っていません。「あなたのブラウザ」と「選んだ AI の会社（Google または OpenAI）」の二者だけで完結します。
+      </div>
+
+      <h3>部品のつながり</h3>
+      <figure class="fig">
+        <svg viewBox="0 0 760 340" role="img" aria-label="拡張機能の内部の部品と、保存場所、Gemini・ChatGPT とのつながりを示す図">
+          <defs>
+            <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path class="head" d="M0 0L10 5L0 10z"/>
+            </marker>
+          </defs>
+          <rect class="zone" x="10" y="10" width="550" height="320" rx="14"/>
+          <text class="s" x="24" y="32">ブラウザ（Brave / Chrome / Edge）の中</text>
+
+          <rect class="box accent" x="30" y="50" width="200" height="110" rx="10"/>
+          <text class="t" x="130" y="82" text-anchor="middle">content.js</text>
+          <text class="s" x="130" y="104" text-anchor="middle">ページの中で作業する係</text>
+          <text class="s" x="130" y="124" text-anchor="middle">文字を集める・置き換える</text>
+          <text class="s" x="130" y="144" text-anchor="middle">バッジ・訳文パネルを表示</text>
+
+          <rect class="box accent" x="310" y="50" width="230" height="110" rx="10"/>
+          <text class="t" x="425" y="82" text-anchor="middle">background.js ＋ chatgpt.js</text>
+          <text class="s" x="425" y="104" text-anchor="middle">裏で待機する係</text>
+          <text class="s" x="425" y="124" text-anchor="middle">AI と通信・サインイン・キャッシュ</text>
+          <text class="s" x="425" y="144" text-anchor="middle">使用量の上限・入力の検証</text>
+
+          <rect class="box" x="30" y="215" width="200" height="90" rx="10"/>
+          <text class="t" x="130" y="247" text-anchor="middle">options.html / .js</text>
+          <text class="s" x="130" y="269" text-anchor="middle">設定画面</text>
+          <text class="s" x="130" y="289" text-anchor="middle">APIキー・サインイン</text>
+
+          <rect class="box" x="310" y="215" width="230" height="90" rx="10"/>
+          <text class="t" x="425" y="247" text-anchor="middle">保存場所</text>
+          <text class="s" x="425" y="269" text-anchor="middle">chrome.storage</text>
+          <text class="s" x="425" y="289" text-anchor="middle">鍵・設定・翻訳キャッシュ</text>
+
+          <rect class="box" x="610" y="50" width="140" height="110" rx="10"/>
+          <text class="t" x="680" y="88" text-anchor="middle">Gemini API</text>
+          <text class="t" x="680" y="108" text-anchor="middle">/ ChatGPT</text>
+          <text class="s" x="680" y="130" text-anchor="middle">Google / OpenAI の</text>
+          <text class="s" x="680" y="148" text-anchor="middle">サーバー</text>
+
+          <line class="arrow" x1="234" y1="105" x2="306" y2="105" marker-start="url(#ah2)" marker-end="url(#ah2)"/>
+          <text class="l" x="270" y="95" text-anchor="middle">依頼 / 結果</text>
+
+          <line class="arrow" x1="544" y1="105" x2="606" y2="105" marker-start="url(#ah2)" marker-end="url(#ah2)"/>
+          <text class="l" x="575" y="95" text-anchor="middle">HTTPS</text>
+
+          <line class="arrow" x1="425" y1="164" x2="425" y2="211" marker-start="url(#ah2)" marker-end="url(#ah2)"/>
+          <text class="l" x="436" y="192">読む・書く</text>
+
+          <line class="arrow" x1="234" y1="260" x2="306" y2="260" marker-end="url(#ah2)"/>
+          <text class="l" x="270" y="250" text-anchor="middle">保存</text>
+        </svg>
+        <figcaption>図3　拡張機能を構成する 3 つの部品と、保存場所、Gemini・ChatGPT の関係</figcaption>
+      </figure>
+      <p><strong>なぜ「ページの中で作業する係」と「裏で待機する係」に分けるのか？</strong>　ページの中で動くプログラムは、ページ側と同じ環境に置かれるため、そのページの制約（通信の制限など）の影響を受けます。また、APIキーのような秘密をページに近い場所で扱うのは避けたいところです。そこで、通信・キャッシュ・APIキーの扱いは「裏で待機する係」に集め、ページの中の係は「文字の置き換えと表示」に専念する分担にしています。</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="how">
+      <h2><span class="no">10</span>中の仕組み</h2>
+      <p class="sub">「ページ全体を翻訳」を選んでから、日本語になるまでの流れを順に説明します。</p>
+
+      <div class="pipeline">
+        <div>
+          <h4>1. 翻訳用のプログラムをページに差し込む</h4>
+          <p>メニューが押されたタブにだけ、必要になった時点で翻訳用のプログラム（<code>content.js</code>）を差し込みます。最初から全サイトに常駐させてはいません。</p>
+          <span class="tech">技術：activeTab 権限 ＋ Scripting API</span>
+        </div>
+        <div>
+          <h4>2. ページの文字を探す</h4>
+          <p>ページ全体から「文字だけの部分」を探します。次のものは<strong>対象から外し</strong>ます：日本語の文（ひらがな・カタカナを含む）、数字や記号だけの部分、プログラムのコード、入力欄、「翻訳しない」と指定された部分。タブのタイトルも対象です。</p>
+          <span class="tech">技術：TreeWalker（DOM）</span>
+        </div>
+        <div>
+          <h4>3. 画面に近づくまで待つ</h4>
+          <p>見つけた文字をすぐに全部訳すのではなく、画面に見えている範囲と、その上下約 1500 ピクセルに入ったものだけを翻訳対象にします。</p>
+          <span class="tech">技術：IntersectionObserver</span>
+        </div>
+        <div>
+          <h4>4. ページの並び順どおりに、段落の境目で束ねる</h4>
+          <p>対象の文字を、ページ上の並び順を保ったまま、1 回の依頼につき最大 約 4,500 文字・80 断片に束ねます。同じ文は 1 回だけ送ります。上限に達したときは、<strong>段落の途中ではなく、手前の段落の境目</strong>で区切り（小さな依頼が増えないよう、上限の半分以上は詰めます）、<strong>見出しは、直後の本文と同じ依頼</strong>に入れます。文が複数の依頼に分かれて、前後の文脈が切れるのを防ぐためです。また、1 回の翻訳開始で送る量が 15 万文字を超えたら、ここで止めます。</p>
+          <span class="tech">技術：独自のまとめ処理（段落＝ブロック要素ごとに区切る。同時に送る依頼は最大 2 件）</span>
+        </div>
+        <div>
+          <h4>5. 裏方が、依頼を検査する</h4>
+          <p>裏方は、依頼の形式と大きさ（件数・文字数）を検査し、異常なら AI に送らず拒否します。さらに、これまでの 10 分間の使用量と合算して、上限を超える場合は止めます。訳したことのある文（キャッシュ、同じサイトのもの）は、ここで外します。</p>
+          <span class="tech">技術：入力の検証・使用量の上限（storage.session に記録）</span>
+        </div>
+        <div>
+          <h4>6. 番号を付けて AI（Gemini / ChatGPT）に依頼する</h4>
+          <p>各断片に <code>&lt;&lt;&lt;1&gt;&gt;&gt;</code>、<code>&lt;&lt;&lt;2&gt;&gt;&gt;</code> のような番号を付けて送り、「同じ番号の形式で返して」と指示します。リンクや太字で 1 文が分かれている場合、隣り合う断片は同じ文の一部かもしれないことも AI に伝え、文脈をつなげて訳してもらいます。固有名詞・コード・URL・数値はそのまま残すよう指示しています。Gemini でも ChatGPT でも、同じ指示・同じ形式を使います。</p>
+          <p><strong>文脈（参考情報）も添えます。</strong>依頼の先頭の段落について、<strong>ページのタイトル・直前の見出し・直前の文章（段落の終わりの 300 文字）</strong>を、「訳さない参考情報」として断片の前に付けます。代名詞の指す先や、専門用語の意味を、前後から判断させるためです。すでに訳した部分も原文を使い、入力欄・コードなど翻訳しない部分の文字は含めません。追加される量は、訳す文字の 2〜7％ほどで、依頼回数は増えません。</p>
+          <span class="tech">技術：Gemini API ／ OpenAI Responses API ／ システム指示（プロンプト）</span>
+        </div>
+        <div>
+          <h4>7. 番号で突き合わせて、元の場所に差し替える</h4>
+          <p>返ってきた訳文を番号で元の断片に対応させ、文字の前後の空白を保ったまま差し替えます。番号が欠けた断片だけ、1 回やり直します。差し替えは「文字」として行い、HTML としては解釈させません。</p>
+          <span class="tech">技術：DOM 書き換え（textContent / nodeValue）</span>
+        </div>
+        <div>
+          <h4>8. ページの変化を見守る</h4>
+          <p>翻訳中にコメントが追加された、ページが自動で書き換わった、という場合は、その部分も自動で翻訳します。翻訳済みの文字をページ側が書き換えたときは、新しい内容を訳し直します。</p>
+          <span class="tech">技術：MutationObserver</span>
+        </div>
+        <div>
+          <h4>9. 「元に戻す」に備えて原文を覚えておく</h4>
+          <p>差し替えた文字ごとに原文を記憶しています。「元に戻す」を選ぶと、それをすべて書き戻します。</p>
+          <span class="tech">技術：Map（原文と訳文の対応表）</span>
+        </div>
+      </div>
+
+      <h3>失敗したときの自動対応</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>起きたこと</th><th>自動でやること</th></tr></thead>
+          <tbody>
+            <tr><td>1 分あたりの上限に達した（HTTP 429）</td><td>Google が示した待ち時間だけ待って、同じモデルで最大 2 回やり直します。</td></tr>
+            <tr><td>1 日あたりの上限に達した（Gemini）／ プランの利用枠に達した（ChatGPT）</td><td>すぐに予備モデルへ切り替えます。予備モデルも使えなければ、状況を日本語で表示して止まります。</td></tr>
+            <tr><td>ChatGPT のアクセストークンが期限切れ・無効（HTTP 401）</td><td>更新用トークンで新しいアクセストークンを取得し、1 回だけやり直します。同時に複数の依頼があっても、更新は 1 回にまとめます。更新できない（有効期限切れ・取り消し）ときは、サインインし直すよう案内します。</td></tr>
+            <tr><td>Google 側の一時的なエラー（5xx）</td><td>少し待って、最大 2 回やり直します。それでもだめなら予備モデルで試します。</td></tr>
+            <tr><td>安全フィルターで依頼全体が止められた</td><td>束ねた断片を半分ずつに分けて再依頼し、訳せる部分だけでも救います。</td></tr>
+            <tr><td>Google の応答がいつまでも返ってこない（約 2〜3 分を超える。入力が長いほど長く待つ）</td><td>待つのをやめて、予備モデルに切り替えます。遅くても返ってくる応答は、待ちます。</td></tr>
+            <tr><td>訳文の番号が一部欠けた</td><td>欠けた断片だけ、もう 1 回依頼します。</td></tr>
+            <tr><td>APIキーが無効・権限がない</td><td>やり直さず、すぐにわかりやすいメッセージを表示します（何度試しても同じ結果になるため）。</td></tr>
+            <tr><td>使用量の上限に達した（安全装置）</td><td>AI には送らずに止め、メッセージを表示します。時間が経てば再開できます。</td></tr>
+            <tr><td>依頼が検査で弾かれた（極端な文字列など）</td><td>半分ずつに分けて送り直し、問題の断片だけを飛ばします。ページ全体の翻訳は止めません。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>選択範囲の翻訳</h3>
+      <p>基本はページ翻訳と同じ流れですが、選んだ文字列を 1 つの断片として依頼し、結果を訳文パネルに表示します。パネルの位置は、選択範囲のすぐ下（下に余裕がなければ上）です。</p>
+
+      <h3>併用（もう一方の AI への切り替え）の流れ</h3>
+      <ol>
+        <li>翻訳の依頼ごとに、試す順番を決めます。「主の AI」の主モデル → 予備モデル → （併用がオンなら）「もう一方の AI」の主モデル → 予備モデル。準備ができていない（APIキーなし・未サインイン）AI は、飛ばします。</li>
+        <li>1 日の上限に達したモデルは、約 30 分の間、この順番から外します（毎回、無駄な依頼をしないため）。すべての候補がそうなら、記録を無視して試します。</li>
+        <li>主の AI のモデルが、上限・混雑・タイムアウト・APIキーやサインインの問題で使えなければ、もう一方へ切り替えます。依頼そのものの不具合など、切り替えても同じ失敗になるものは、切り替えません。</li>
+        <li>どのモデルで訳したかは、結果と一緒にページに返し、右下の枠に表示します。</li>
+      </ol>
+
+      <h3>ChatGPT でサインインする流れ</h3>
+      <ol>
+        <li>「ChatGPT でサインイン」を押すと、拡張機能が、使い捨ての秘密の値（PKCE の検証子・state・nonce）を作り、OpenAI のサインイン画面を新しいタブで開きます。待ち受けの状態は、ブラウザの一時領域に保存します（裏方が眠っていても、続きができるように）。</li>
+        <li>あなたがログインして承認すると、OpenAI の画面が、自分のパソコン内のアドレス（<code>http://127.0.0.1:1455/auth/callback</code>）へ移動しようとします。</li>
+        <li>拡張機能は、その移動を <code>webRequest</code> で見つけ、<code>state</code> が自分の依頼のものと一致する場合だけ、確認コードを取り出します。タブは閉じます（「接続できません」の画面を残しません）。</li>
+        <li>確認コードと PKCE の検証子を <code>auth.openai.com</code> に送り、トークンに交換します。応答の中の <code>nonce</code> が一致すること、利用枠を使う権限（<code>chatgpt.tokens.use.direct</code>）が付いていることを確認してから、保存します。</li>
+        <li>続けて、あなたのアカウントが使えるモデルの一覧を取得し、翻訳向きの軽量なモデルを自動で選びます。画面には「サインイン済み」と表示されます。</li>
+        <li>以後の翻訳では、アクセストークンを使います。約 1 時間で期限が切れるため、期限の少し前に、更新用トークンで自動更新します。</li>
+      </ol>
+
+      <h3>設定画面のモデル一覧が作られる流れ</h3>
+      <p>（Gemini を選んだ場合）</p>
+      <ol>
+        <li>設定画面を開くと（または「モデル一覧を更新」を押すと）、裏方が、保存済みの APIキーで Google に「使えるモデルの一覧」を問い合わせます。</li>
+        <li>返ってきた一覧から、<strong>文章の翻訳に使えるものだけ</strong>を残します。音声読み上げ・画像生成・検索用の変換・リアルタイム音声などの種類、日付付きの旧版、提供終了が近い古い世代（2.5 より前）は除きます。</li>
+        <li><strong>世代の新しい順</strong>に並べ（同じ世代では Flash → Flash-Lite → Pro の順）、設定画面の選択欄に表示します。取得結果はブラウザ内に保存され、次回はすぐ表示されます。</li>
+        <li>取得できなかったときは、あらかじめ用意した 6 件の候補を表示します。</li>
+      </ol>
+      <p>ChatGPT を選んだ場合は、サインインしたアカウントが使えるモデルを OpenAI から取得し、表示用として公開されているものを、サーバーの並びのまま表示します（固定の候補はありません）。</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="design">
+      <h2><span class="no">11</span>設計の考え方</h2>
+      <p class="sub">「なぜこの作りにしたのか」の理由です。</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方針</th><th>理由</th><th>具体的にやっていること</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>無料枠で足りること</td>
+              <td>追加課金をしない、という条件が最優先だったため。</td>
+              <td>まとめて送る・見える範囲だけ・キャッシュ・予備モデル・同じ文の重複排除。</td>
+            </tr>
+            <tr>
+              <td>キーを守る</td>
+              <td>キーが漏れると、無料枠の消費や、請求先を登録している場合は金銭被害につながるため。</td>
+              <td>キー・サインイン情報はページから隔離し、通信先を Gemini・OpenAI の宛先だけに固定。エラー表示でも伏せ字。「忘れる」モードと、削除・サインアウトを用意。</td>
+            </tr>
+            <tr>
+              <td>悪用されにくくする</td>
+              <td>悪意のあるページが、拡張機能を踏み台にできないように。</td>
+              <td>依頼の検査と使用量の上限（3 段階）。呼び出し元の確認。キャッシュのサイト別分離。</td>
+            </tr>
+            <tr>
+              <td>勝手に動かない</td>
+              <td>プライバシーと無料枠の消費を、操作した人がコントロールできるように。</td>
+              <td>右クリック／アイコンを押したタブだけで動作。常時監視はしない。初回に注意事項の確認を必須にする。</td>
+            </tr>
+            <tr>
+              <td>権限は最小限</td>
+              <td>万一の悪用リスクを小さくするため。</td>
+              <td>通信先は Gemini・OpenAI の 3 つのホストと、サインインの戻り先 1 つのみ。全サイトへのアクセス権限は持たない。<code>webRequest</code> は、戻り先を見つけるためだけに使う。</td>
+            </tr>
+            <tr>
+              <td>ページを壊さない</td>
+              <td>ボタンやリンクが動かなくなると使い物にならないため。</td>
+              <td>文字だけを置き換え、構造は変えない。表示パーツはページの CSS から隔離。いつでも原文に戻せる。</td>
+            </tr>
+            <tr>
+              <td>仕組みを単純に保つ</td>
+              <td>受け取った人が、中身を確認したり、人に依頼して直したりしやすいように。</td>
+              <td>外部の部品なし・ビルド作業なし・難読化なし。ファイルを直して「再読み込み」するだけで反映される。</td>
+            </tr>
+            <tr>
+              <td>壊れても気づける</td>
+              <td>無言で失敗するのが一番困るため。</td>
+              <td>エラーは原因別の日本語メッセージで表示。自動テスト 89 件と、静的な監査 19 項目、実ブラウザでの検証で確認。</td>
+            </tr>
+            <tr>
+              <td>使えるときは、いつもの AI を使う</td>
+              <td>無料枠・プランの利用枠を無駄にせず、速さも保つため。</td>
+              <td>併用は「主の AI が使えないときだけ」切り替える。上限に達したモデルは一定時間飛ばし、時間が経つと自動で戻る。どの AI で訳したかを、画面に表示する。</td>
+            </tr>
+            <tr>
+              <td>公式の手順に沿う</td>
+              <td>ChatGPT のサインインは、仕様が公開されている公式の手順で実装し、独自の方法でトークンを得ることはしないため。</td>
+              <td>OpenAI の「Sign in with ChatGPT」の手順（PKCE・state・nonce の確認、必要な権限の確認）をそのまま実装。ブラウザで動く形に合わせた部分（戻り先の検知）だけが、公式の手順と異なります。</td>
+            </tr>
+            <tr>
+              <td>モデルの世代交代に強い</td>
+              <td>AI のモデルは入れ替わりが早く、固定の候補リストはすぐ古くなるため。</td>
+              <td>モデル名を決め打ちにせず、設定画面で Google から利用可能な一覧を取得して表示。手入力にも対応。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="files">
+      <h2><span class="no">12</span>ファイル構成</h2>
+      <p class="sub">配布される zip の中身（利用者向け）と、配布元が持っている開発用ファイルです。</p>
+
+      <h3>配布される zip の中身</h3>
+      <div class="tree">right-click-translate-0.5.0/
+├─ README.txt               <span class="c">← 最初に読む短い案内</span>
+├─ manual.html              <span class="c">← この説明書</span>
+├─ CHANGELOG.md             <span class="c">← 変更履歴</span>
+├─ LICENSE                  <span class="c">← ライセンス（MIT）</span>
+└─ extension/               <span class="c">← ★ ブラウザに読み込むのはこのフォルダ</span>
+    ├─ manifest.json        <span class="c">拡張機能の「身分証」。名前・権限・通信先の制限の宣言</span>
+    ├─ background.js        <span class="c">裏で待機する係。メニュー、Gemini 通信、キャッシュ、使用量の上限、モデル一覧の取得</span>
+    ├─ chatgpt.js           <span class="c">ChatGPT のプラン用。サインイン、トークンの更新、翻訳の依頼、モデル一覧</span>
+    ├─ content.js           <span class="c">ページの中で作業する係。文字の収集・置換、バッジ、訳文パネル</span>
+    ├─ options.html         <span class="c">設定画面の見た目</span>
+    ├─ options.css          <span class="c">設定画面のデザイン</span>
+    ├─ options.js           <span class="c">設定画面の動き（使う AI の選択・保存・サインイン・接続テスト・モデル一覧・キー削除）</span>
+    └─ icons/               <span class="c">拡張機能のアイコン画像（3 サイズ）</span></div>
+
+      <h3>配布元が持っている開発用ファイル（利用には不要）</h3>
+      <div class="tree">tests/
+├─ static-audit.mjs         <span class="c">静的な監査（19 項目）</span>
+├─ security.test.mjs        <span class="c">安全装置の自動テスト（14 件）</span>
+├─ background.test.mjs      <span class="c">通信・翻訳動作・文脈の受け取りの自動テスト（28 件）</span>
+├─ chatgpt.test.mjs         <span class="c">ChatGPT のプランの自動テスト（25 件）</span>
+├─ failover.test.mjs        <span class="c">併用（切り替え・一定時間の記録・速さ優先）・文脈の自動テスト（19 件）</span>
+├─ roundtrip.test.mjs       <span class="c">翻訳結果の取り込みの正確さ（ランダムな 300 通り ほか 3 件）</span>
+├─ perf-check.mjs           <span class="c">拡張機能自身の処理時間・ページ内の負荷・元に戻す正確さの測定</span>
+├─ browser-load-check.mjs   <span class="c">実際のブラウザに読み込んで確かめる検証（15 項目）</span>
+├─ e2e-chatgpt.mjs          <span class="c">実際のブラウザで、ChatGPT のサインイン・翻訳・併用を確かめる検証（24 項目）</span>
+├─ badge-check.mjs          <span class="c">実際のブラウザで、右下の枠・パネルに使ったモデルが出ることを確かめる検証（6 項目）</span>
+├─ context-check.mjs        <span class="c">実際のブラウザで、依頼の区切り（段落の境目・見出し）と文脈の添え方を確かめる検証（14 項目）</span>
+├─ ab-quality.mjs           <span class="c">翻訳の質を、旧方式と新方式で、実際の Gemini を使って比べるツール（ご自身の APIキーで実行）</span>
+├─ latency-probe.mjs        <span class="c">ブラウザを介さずに Gemini の応答時間を測る診断（任意）</span>
+└─ helpers.mjs ほか          <span class="c">テスト用の共通部品・確認用ページ</span>
+tools/
+└─ make-release.ps1         <span class="c">安全確認 → 配布用 zip と SHA-256 の作成 → releases/ へのコピー・README のダウンロード欄の更新</span>
+.gitignore                  <span class="c">Git に入れないもの（dist/・秘密鍵・ログなど）</span>
+releases/                   <span class="c">最新版の zip と SHA-256（Git で公開する用。make-release.ps1 が作る）</span></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="limits">
+      <h2><span class="no">13</span>できないこと・今後の拡張</h2>
+
+      <h3>現時点でできないこと</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>対象</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td><code>iframe</code> の中</td><td>ページの中に埋め込まれた別ページ（埋め込み動画のコメント欄、広告枠、一部のフォームなど）は翻訳されません。</td></tr>
+            <tr><td>Shadow DOM の中</td><td>一部のサイトが使う「部品化された箱」の中の文字は翻訳されません。</td></tr>
+            <tr><td>画像の中の文字</td><td>画像として表示されている文字は読み取れません。</td></tr>
+            <tr><td>入力欄の薄い案内文など</td><td><code>placeholder</code> や画像の説明文（<code>alt</code>）などの「属性」は翻訳されません。</td></tr>
+            <tr><td>拡張機能が動けないページ</td><td>ブラウザの設定ページ、ストア、PDF ビューア。</td></tr>
+            <tr><td>日本語への翻訳以外</td><td>翻訳先は日本語固定です。</td></tr>
+            <tr><td>極端に長い 1 つの文字のかたまり</td><td>タグで区切られない 15,000 文字を超える文字のかたまりは、翻訳の対象外です（ページの他の部分は翻訳されます）。</td></tr>
+            <tr><td>自動更新</td><td>ストアを使っていないため、新しい版は手動で入れ替えます。</td></tr>
+            <tr><td>ChatGPT の「APIキー」方式</td><td>ChatGPT のプランで使うには、サインインの方式のみに対応しています（OpenAI の API の APIキーを入力する方式には、対応していません）。</td></tr>
+            <tr><td>Claude（Anthropic）の契約の利用</td><td>非対応です。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>今後の拡張アイデア</h3>
+      <ul>
+        <li><strong>ローカル AI の追加</strong>：自分のパソコン上で動く AI（Ollama など）で翻訳する。回数制限・外部送信がなくなる反面、パソコンの性能が必要です。</li>
+        <li><strong>機密性の高いサイトでの確認表示</strong>：メールや金融系のサイトでは、翻訳を始める前に確認を出す。</li>
+        <li><strong>拡張機能 ID の固定</strong>：フォルダを移動しても設定が引き継がれるようにする。</li>
+        <li><strong>翻訳先の言語の選択</strong>、<strong>iframe 内の翻訳</strong>、<strong>訳文と原文の並列表示</strong>。</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="distribute">
+      <h2><span class="no">14</span>配布する方へ</h2>
+      <p class="sub">この拡張機能を、ほかの人に渡す側の手順と心得です。受け取る側は読まなくて構いません。</p>
+
+      <h3>配る前に</h3>
+      <ol class="steps">
+        <li>
+          <p><strong>配布用 zip を作る</strong></p>
+          <p>プロジェクトのフォルダで、PowerShell から次を実行します。</p>
+<pre class="cmd">.\tools\make-release.ps1</pre>
+          <p class="why">安全確認（静的な監査・自動テスト）を自動で行い、<strong>ひとつでも失敗したら zip を作りません</strong>。成功すると <code>dist</code> フォルダに、zip・SHA-256 のファイル・外出し用の <code>README.md</code>（バージョンと SHA-256 が自動で入ります）ができます。zip の中には、この説明書が <code>manual.html</code> として同梱されます。</p>
+        </li>
+        <li>
+          <p><strong>zip と SHA-256 の値を、別の経路で送る</strong></p>
+          <p class="why">たとえば zip はファイル共有で、SHA-256 の値は別のメッセージで送ります。すり替えがあった場合に、受け取る人が気づけます。</p>
+        </li>
+        <li>
+          <p><strong>受け取る人に、必ず次の 3 点を伝える</strong></p>
+          <ul>
+            <li>鍵は<strong>ご自身のもの</strong>を使う（Gemini はご自身で無料で作る APIキー、ChatGPT はご自身のアカウントでのサインイン。配布する人のキーやアカウントは渡さない・使わせない）。</li>
+            <li>Gemini を使う場合、Google 側で<strong>支払い方法を登録しない</strong>。</li>
+            <li>機密性のあるページ（メール・社内文書・個人情報）では<strong>使わない</strong>。</li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="callout err">
+        <span class="ttl">配布する人自身のキーは、絶対に渡さない・埋め込まない</span>
+        キーは配布物のファイルに含まれません（静的な監査で、キーらしい文字列が埋め込まれていないことも確認しています）。ご自身のキーを教えてしまうと、その人の利用分も、あなたの無料枠と責任になります。
+      </div>
+
+      <h3>配るときの心得</h3>
+      <ul>
+        <li><strong>配る範囲は、責任を持てる範囲にする</strong>：この方式は、ストアの審査を受けていません。不特定多数に公開する場合は、下の「GitHub などで公開する場合」を確認してください（ストアを経由する方が、受け取る側の安心につながります）。</li>
+        <li><strong>コードを変えたら、必ず再度 <code>make-release.ps1</code> を実行する</strong>：監査やテストに通らないものは配らない。</li>
+        <li><strong>バージョンを上げる</strong>：<code>manifest.json</code> の <code>version</code> を更新し、「更新履歴」に記録します。</li>
+        <li><strong>更新の案内を出す</strong>：自動更新されないため、受け取った人に、新しい zip と SHA-256 を改めて送ります。</li>
+        <li><strong>問題を見つけたら、すぐに配布を止めて知らせる</strong>：特にキーの扱いに関わる問題は、利用者へ速やかに連絡します。</li>
+      </ul>
+
+      <h3>Git で管理する（変更の記録と公開）</h3>
+      <p>このプロジェクトは Git で管理しています。変更したら、次の 4 つの命令で記録して、GitHub に反映します（<code>git push</code> で、公開されます）。</p>
+<pre class="cmd">git status                  # 変更したファイルを確認
+git add -A                  # 変更をまとめて、記録の対象にする
+git commit -m "変更の説明"   # ローカルに記録
+git push                    # GitHub に反映</pre>
+      <ul>
+        <li><strong>メールアドレスに注意</strong>：コミットには、設定したメールアドレスが載り、公開されます。GitHub の「Settings → Emails」で、「Keep my email addresses private」と「Block command line pushes that expose my email」をオンにし、このフォルダでは <code>git config user.email</code> に、GitHub が表示する非公開用のアドレス（<code>数字+ユーザー名@users.noreply.github.com</code>）を設定します。</li>
+        <li><strong>版を揃える</strong>：<code>manifest.json</code> の <code>version</code> と <code>CHANGELOG.md</code> の先頭の版は、同じにします（静的な監査が確認します）。</li>
+        <li><strong>新しい版を出すとき</strong>：<code>make-release.ps1</code> を実行し、できた <code>releases</code> フォルダと README の変更を、そのままコミットします。</li>
+        <li><strong>公開してはいけないもの</strong>（APIキー・トークン・個人情報）を、コミットしてしまったら、あとで消しても履歴に残ります。キーなら、先に無効にしてください。</li>
+      </ul>
+
+      <h3>GitHub などで公開する場合</h3>
+      <p>公開すると、世界中の誰でもコードを読み、ダウンロードできるようになります。次の点を確認してから公開してください。</p>
+      <ol class="steps">
+        <li>
+          <p><strong>秘密情報が入っていないか確認する</strong></p>
+          <p class="why">APIキー・パスワード・個人のメールアドレスやパスなどが、ファイルに入っていないこと。公開した後で消しても、変更の履歴には残り続けます。このプロジェクトでは、配布前の監査でキーらしい文字列の埋め込みを検知します。</p>
+        </li>
+        <li>
+          <p><strong>コミットのメールアドレスを確認する</strong></p>
+          <p class="why">コミット（変更の記録）には、設定したメールアドレスが載り、公開されます。GitHub の「noreply アドレス」を使う設定を検討してください。</p>
+        </li>
+        <li>
+          <p><strong>zip には SHA-256 を添える（このプロジェクトでは、ソースと一緒に <code>releases/</code> に置く）</strong></p>
+          <p class="why">このプロジェクトは、ソース一式と一緒に、<code>releases</code> フォルダに「最新版の zip と SHA-256」を置く形で公開しています（<code>make-release.ps1</code> が、<code>releases</code> へのコピーと、README のダウンロード欄の書き換えまで行います）。古い版は、Git の履歴に残ります。GitHub の「Releases」機能を使う方法もあります。zip だけを置く配布用リポジトリにするなら、<code>dist</code> の zip・<code>README.md</code>・SHA-256 のファイルを置きます。どの場合も、公式のリポジトリの URL を説明書や README に明記し、フォーク（複製）された改変版と区別できるようにします。</p>
+        </li>
+        <li>
+          <p><strong>ライセンスを決める</strong></p>
+          <p class="why">ライセンスを付けないと、他の人はコードを再利用・改変できません（著作権は作者に残ります）。このプロジェクトは MIT License を選んでいます。<code>LICENSE</code> を、リポジトリと zip の両方に置きます（MIT は、複製物にライセンスの文面を含めることが条件です）。</p>
+        </li>
+        <li>
+          <p><strong>Google・OpenAI の利用規約を確認する</strong></p>
+          <p class="why">Google には、EEA・スイス・英国の利用者、18 歳未満、業務目的での利用などに関する条項があります。OpenAI の「Sign in with ChatGPT」は、ブラウザの拡張機能での利用に触れていません。本書「お金と無料枠の話」の注意と、原文を確認してください。</p>
+        </li>
+        <li>
+          <p><strong>（任意）名称を確認する</strong></p>
+          <p class="why">説明文に「Gemini」「ChatGPT」が入っています。Google・OpenAI の商標・ブランドのガイドラインに照らして問題ないか、確認してください。</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="glossary">
+      <h2><span class="no">15</span>用語集</h2>
+      <p class="sub">説明書の中に出てきた言葉をまとめました。</p>
+
+      <dl class="gloss">
+        <dt>API（エーピーアイ）</dt>
+        <dd>外から他社のサービスに仕事を頼むための窓口。<span class="ex">例：この拡張機能が Gemini に「翻訳して」と頼むときに使う。</span></dd>
+
+        <dt>APIキー</dt>
+        <dd>API を使うときの「合鍵」または「会員番号」。誰の利用枠かを示します。他人に教えてはいけません。</dd>
+
+        <dt>併用（フェイルオーバー）</dt>
+        <dd>主に使う AI が使えないときだけ、もう一方の AI に自動で切り替えて、翻訳を続ける仕組み。<span class="ex">例：通常は Gemini の無料枠、使い切ったら ChatGPT のプラン。</span></dd>
+
+        <dt>サインイン（Sign in with ChatGPT）</dt>
+        <dd>パスワードをアプリに渡さずに、「このアプリに、私の ChatGPT の利用枠を使わせてよい」と OpenAI に承認する仕組み。承認すると、アプリは「トークン」を受け取ります。</dd>
+
+        <dt>トークン（アクセストークン・更新用トークン）</dt>
+        <dd>サインイン後に発行される、一時的な利用許可証。アクセストークンは約 1 時間で期限が切れ、更新用トークンで新しいものに取り替えます。APIキーと同じく、他人に見せてはいけません。</dd>
+
+        <dt>PKCE（ピクシー）／ state ／ nonce</dt>
+        <dd>サインインの途中で「確認コード」を横取り・すり替えされないための、使い捨ての確認用の値。拡張機能が毎回作り、戻ってきた値と照合します。</dd>
+
+        <dt>SHA-256（チェックサム）</dt>
+        <dd>ファイルの「指紋」のような値。ファイルが 1 文字でも変わると、まったく別の値になります。受け取ったファイルが、配布元のものと同じか確かめるために使います。</dd>
+
+        <dt>CSP</dt>
+        <dd>「このプログラムは、ここにしか通信してはいけない」などをブラウザに宣言する仕組み。違反する動きをブラウザが遮断します。</dd>
+
+        <dt>Flash / Flash-Lite / Pro</dt>
+        <dd>モデルの系列名。Flash-Lite は軽量・低コスト、Flash は標準的な高品質、Pro は高性能です。<span class="ex">例：<code>gemini-3.5-flash-lite</code> は「第 3.5 世代の Flash-Lite」。</span></dd>
+
+        <dt>キャッシュ</dt>
+        <dd>一度調べた結果を手元に記録しておき、次から使い回す仕組み。<span class="ex">例：一度訳した「ログイン」「お問い合わせ」などを、AI に頼まず再利用する。</span></dd>
+
+        <dt>コンテンツスクリプト</dt>
+        <dd>拡張機能のうち、Web ページの中に入り込んで作業する部分。この拡張機能では <code>content.js</code>。</dd>
+
+        <dt>サービスワーカー</dt>
+        <dd>拡張機能のうち、画面には出ず、裏で待機して仕事を受け付ける部分。この拡張機能では <code>background.js</code>。</dd>
+
+        <dt>Shadow DOM（シャドウ・ドム）</dt>
+        <dd>ページ側のデザインの影響を受けないよう、部品を専用の「箱」に入れる技術。</dd>
+
+        <dt>DOM（ドム）</dt>
+        <dd>Web ページの構造（見出し・段落・リンクなど）を、プログラムから扱えるようにした仕組み。</dd>
+
+        <dt>デベロッパーモード</dt>
+        <dd>ストアを通さず、自分で用意した拡張機能を読み込めるようにするブラウザの設定。</dd>
+
+        <dt>プロンプト</dt>
+        <dd>AI に渡す指示文。この拡張機能では「自然な日本語に訳す」「固有名詞やコードは残す」「番号を保つ」などを指示しています。</dd>
+
+        <dt>プロンプトインジェクション</dt>
+        <dd>AI に渡される文章の中に、本来の指示を上書きするような偽の指示を仕込む攻撃。ページの文章に埋め込まれることがあります。</dd>
+
+        <dt>マニフェスト（manifest.json）</dt>
+        <dd>拡張機能の名前・権限・使うファイルを書いた「身分証」のようなファイル。</dd>
+
+        <dt>無料枠</dt>
+        <dd>料金を払わなくても使える範囲（回数や量の上限）。上限は 1 分あたり・1 日あたりなどで決まっています。</dd>
+
+        <dt>モデル</dt>
+        <dd>翻訳などを実際に行う AI の種類（機種）。性能・速さ・費用が異なります。</dd>
+
+        <dt>リクエスト</dt>
+        <dd>「依頼 1 回」のこと。無料枠では、このリクエストの回数に厳しい上限があります。</dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="history">
+      <h2><span class="no">16</span>更新履歴</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nw">バージョン</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="nw">0.5.0</td>
+              <td>
+                Web ページ翻訳の文脈を改善しました。依頼回数・応答時間はほぼ変わりません。
+                <ul>
+                  <li>依頼を、段落の途中ではなく、段落の境目で区切るようにしました。見出しは、直後の本文と同じ依頼に入ります。</li>
+                  <li>依頼の先頭の段落に、ページのタイトル・直前の見出し・直前の文章を、訳さない参考情報として添えるようにしました（設定画面の注意事項にも追記）。</li>
+                  <li>実ブラウザの検証 <code>context-check.mjs</code>（14 項目）と、翻訳の質の A/B 比較ツール <code>ab-quality.mjs</code> を追加。訳の質の改善は、実際の Gemini での比較が必要なため、未測定です。</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="nw">0.4.0</td>
+              <td>
+                Gemini と ChatGPT を併用できるようになりました。右下の枠に、使ったモデルが出ます。
+                <ul>
+                  <li>設定画面に「上限・エラーのときは、もう一方の AI に切り替える」を追加（既定はオフ）。通常は Gemini の無料枠、使い切ったら ChatGPT、のように使えます。</li>
+                  <li>1 日の上限に達したモデルは約 30 分、試さずに切り替え先を使い、時間が経つと自動で元に戻ります。</li>
+                  <li>ページ右下の枠と、選択範囲のパネルに、使ったモデル（例：Gemini / gemini-3.5-flash-lite）を表示。</li>
+                  <li>ChatGPT の「速さを優先する」（思考を控えめにする。既定でオン）と、応答の頭・最初の文字までの時間の表示を追加。</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="nw">0.3.0</td>
+              <td>
+                ChatGPT のプラン（Plus / Pro など）で翻訳できるようになりました。
+                <ul>
+                  <li>設定画面に「使う AI」（Gemini API ／ ChatGPT のプラン）を追加。ChatGPT は、OpenAI の「Sign in with ChatGPT」でサインインし、APIキーなしで、ご契約のプランの利用枠を使います。</li>
+                  <li>アクセストークンの自動更新、アカウントが使えるモデルの自動取得、利用枠の上限の案内と予備モデルへの切り替え。</li>
+                  <li>通信先に <code>api.openai.com</code>・<code>auth.openai.com</code> を追加（CSP と権限で固定）。権限に <code>webRequest</code> を追加（戻り先の観測のみ）。</li>
+                  <li>静的な監査（19 項目）・自動テスト（65 件）・実ブラウザでの検証を、新しい構成に合わせて拡充。変更履歴（<code>CHANGELOG.md</code>）を同梱。（0.4.0 で、自動テストは 83 件に拡充）</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="nw">0.2.0</td>
+              <td>
+                他の人に配布することを前提に、安全面を強化しました。
+                <ul>
+                  <li>通信先を Gemini だけに固定（CSP）。保存領域を「信頼された領域」だけに限定。</li>
+                  <li>依頼の検査と、使用量の上限（1 回の翻訳開始・10 分間）を追加。</li>
+                  <li>呼び出し元の確認、エラー表示でのキーの伏せ字、翻訳キャッシュのサイト別分離。</li>
+                  <li>設定画面に「初回の確認」「キーを保存しておく」のオン／オフ、「APIキーを削除」を追加。</li>
+                  <li>モデルを、Google から取得した一覧（新しい順）から選べるように改善（手入力・予備モデルなしにも対応）。</li>
+                  <li>配布用 zip と SHA-256 を作るスクリプト、静的な監査、実ブラウザでの検証を追加。説明書を、配布先の方向けに全面的に改訂。</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="nw">0.1.0</td>
+              <td>初版。右クリックでのページ翻訳・選択範囲の翻訳、Gemini 無料枠向けの節約機能。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>右クリックで日本語に翻訳　説明書　／　バージョン 0.5.0</p>
+  <p>非公式の個人製作物です。Google および Gemini は Google LLC の、OpenAI および ChatGPT は OpenAI の商標です。現状のまま（無保証）で提供しています。</p>
+</footer>
+
+<script>
+  // 目次：いま読んでいる章をハイライトする（なくても説明書は読めます）
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var byId = {};
+    links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (l) { l.classList.remove('on'); });
+        if (byId[e.target.id]) byId[e.target.id].classList.add('on');
+      });
+    }, { rootMargin: '-15% 0px -75% 0px' });
+    document.querySelectorAll('main section[id]').forEach(function (s) { io.observe(s); });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# 改行の自動変換（Windows と他の OS の違い）。バイナリとチェックサムは、そのまま扱う
+* text=auto
+*.zip binary
+*.png binary
+*.sha256.txt -text

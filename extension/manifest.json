@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "右クリックで日本語に翻訳",
+  "version": "0.5.0",
+  "description": "右クリックでページ全体・選択範囲を日本語に翻訳します。Gemini API（無料枠）と ChatGPT のプランを、切り替え・併用して利用できます。",
+  "minimum_chrome_version": "120",
+  "permissions": ["contextMenus", "activeTab", "scripting", "storage", "webRequest"],
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+    "https://auth.openai.com/*",
+    "http://127.0.0.1:1455/auth/callback*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'none'; script-src 'self'; object-src 'self'; style-src 'self'; connect-src https://generativelanguage.googleapis.com https://api.openai.com https://auth.openai.com; base-uri 'none'"
+  },
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "このページを日本語に翻訳" },
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
