@@ -36,10 +36,12 @@ await new Promise((resolve) => {
 });
 
 const profile = mkdtempSync(path.join(os.tmpdir(), 'ja-translate-e2e-'));
+// CI（GitHub Actions）など、追加のオプションが要る環境用（例: BROWSER_FLAGS="--no-sandbox"）
+const extraFlags = (process.env.BROWSER_FLAGS || '').split(/\s+/).filter(Boolean);
 const child = spawn(
   browserPath,
   ['--headless=new', `--user-data-dir=${profile}`, '--remote-debugging-pipe', '--enable-unsafe-extension-debugging',
-    '--no-first-run', '--no-default-browser-check', '--disable-gpu', 'about:blank'],
+    '--no-first-run', '--no-default-browser-check', '--disable-gpu', ...extraFlags, 'about:blank'],
   { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] },
 );
 

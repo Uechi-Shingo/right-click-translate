@@ -1,6 +1,8 @@
 # 変更を push したとき・PR を作ったときに、監査と自動テストを自動で実行する。
-# 公開リポジトリの GitHub Actions は、標準の実行環境（ubuntu-latest）なら無料。
-# ブラウザを使う検証（tests/*-check.mjs・e2e-chatgpt.mjs）は、実際のブラウザが必要なので、手元で実行する。
+# 公開リポジトリの GitHub Actions は、標準の実行環境（ubuntu-latest。GitHub が用意する使い捨ての仮想マシン）なら無料。
+#   test    : ブラウザを使わない検査（監査・単体テスト・リポジトリの検査）
+#   browser : 実際の Chrome に拡張機能を読み込んで確かめる検証（「そもそも動かない」を見つける煙テスト）
+# 実際の Gemini / OpenAI を呼ぶもの（質の比較・本物のサインイン）は、キー・人の操作が要るので、CI には入れない。
 name: CI
 
 on:
@@ -50,3 +52,40 @@ jobs:
 
       - name: リポジトリの検査（秘密情報・個人情報・配布物の整合）
         run: node tests/repo-hygiene.mjs
+
+  browser:
+    name: ブラウザでの検証（Chrome）
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # GitHub の実行環境では、ブラウザの安全機構（サンドボックス）が使えないことがあるため外す。
+      # 実行のたびに破棄される使い捨ての環境で、検証用の偽のデータしか使わないので、問題ない。
+      BROWSER_FLAGS: --no-sandbox --disable-dev-shm-usage
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: ブラウザ（実行環境に入っている Chrome）の確認
+        run: |
+          CHROME="$(command -v google-chrome)"
+          echo "CHROME=$CHROME" >> "$GITHUB_ENV"
+          "$CHROME" --version
+
+      # 前の検証が失敗しても、残りを実行する（失敗を、まとめて確認できるように）
+      - name: 拡張機能の読み込み検証（設定が受理される・CSP・設定画面・安全装置）
+        run: bash .github/scripts/run-check.sh "browser-load-check" node tests/browser-load-check.mjs "$CHROME"
+
+      - name: ChatGPT のサインイン・併用の検証（OpenAI への通信は偽物）
+        if: ${{ !cancelled() }}
+        run: bash .github/scripts/run-check.sh "e2e-chatgpt" node tests/e2e-chatgpt.mjs "$CHROME"
+
+      - name: 右下の枠・パネルの表示の検証
+        if: ${{ !cancelled() }}
+        run: bash .github/scripts/run-check.sh "badge-check" node tests/badge-check.mjs "$CHROME"
+
+      - name: 依頼の区切り・文脈の検証
+        if: ${{ !cancelled() }}
+        run: bash .github/scripts/run-check.sh "context-check" node tests/context-check.mjs "$CHROME"

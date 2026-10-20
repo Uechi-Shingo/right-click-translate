@@ -3,3 +3,5 @@
 *.zip binary
 *.png binary
 *.sha256.txt -text
+# シェルスクリプトは、Linux（CI）で動くよう、改行を LF に固定
+*.sh text eol=lf
