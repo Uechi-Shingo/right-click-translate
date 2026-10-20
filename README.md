@@ -1,5 +1,7 @@
 # 右クリックで日本語に翻訳
 
+[![CI](https://github.com/Uechi-Shingo/right-click-translate/actions/workflows/ci.yml/badge.svg)](https://github.com/Uechi-Shingo/right-click-translate/actions/workflows/ci.yml)
+
 Chrome 系ブラウザ（Brave / Chrome / Edge）用の翻訳拡張機能です。右クリックで **ページ全体** または **選択範囲** を日本語に翻訳します。
 翻訳に使う AI は、設定画面で次の 2 つから選べます。
 
@@ -83,15 +85,24 @@ zip と SHA-256 の値は、**別の経路**で渡してください。自分の
 
 リポジトリには、ソース一式（`extension/`・`tests/`・`tools/`・説明書・README・CHANGELOG）と、`releases/`（最新版の zip と SHA-256）を置きます。`dist/` は、作業用なのでコミットしません（`.gitignore`）。
 
+`main` は、そのまま**公開版**です（README のダウンロードリンクが、`main` の `releases/` を指すため）。そこで、変更は**ブランチで作業して、確認してから `main` に取り込みます**。
+
 ```powershell
-git status                         # 変更したファイルを確認
-git add -A                         # 変更をまとめて、記録の対象にする
-git commit -m "変更の説明"          # ローカルに記録
-git push                           # GitHub に反映（公開される）
+git switch -c feature/変更の名前   # 1. 作業用のブランチを作る（fix/…・chore/… でもよい）
+git add -A                         # 2. 変更をまとめて、記録の対象にする
+git commit -m "変更の説明"          #    ローカルに記録（こまめに）
+git push -u origin feature/変更の名前   # 3. ブランチを GitHub に退避（公開版には影響しない。CI が自動で走る）
 ```
 
+4. GitHub の画面で、そのブランチの「**Compare & pull request**」から PR（プルリクエスト）を作ります。CI の結果（✓ / ✗）と、変更の差分を見直します（ひな形は `.github/pull_request_template.md`）。
+5. 問題がなければ、PR の画面の「**Merge pull request**」で `main` に取り込みます（1 人のときは、ローカルで `git switch main` → `git merge ブランチ名` → `git push` でも構いません）。
+6. 新しい版を出すときは、取り込んだあとの `main` で、`.\tools\make-release.ps1 -RepoUrl https://github.com/Uechi-Shingo/right-click-translate` を実行し、できた `releases/` と README の変更を、コミットして push します。
+
+説明書や README の誤字のような**小さな修正は、`main` に直接**コミットして構いません。
+
 - 変更したら、`manifest.json` の `version` と `CHANGELOG.md` の先頭の版を**揃えて**上げます（静的な監査が、一致していることを確認します）。
-- 新しい版を出すときは、`.\tools\make-release.ps1 -RepoUrl https://github.com/Uechi-Shingo/right-click-translate` を実行し、できた `releases/` と README の変更を、そのままコミットします。
+- **CI（GitHub Actions）**: push と PR のたびに、静的な監査・自動テスト・リポジトリの検査（秘密情報・個人情報・配布物の整合）が自動で走ります（公開リポジトリでは無料）。ブラウザを使う検証（`*-check.mjs`・`e2e-chatgpt.mjs`）は、実際のブラウザが必要なので、手元で実行します。結果は、リポジトリの「Actions」タブで見られます。
+- **取り込み済みのブランチ**は、消して構いません（`git branch -d ブランチ名`。GitHub 上のものは、PR の画面の「Delete branch」）。
 - **メールアドレスに注意**: コミットには、設定したメールアドレスが載り、公開されます。GitHub の「Settings → Emails」で、「Keep my email addresses private」と「Block command line pushes that expose my email」をオンにし、このフォルダでは次のように、非公開用のアドレスを設定してください（GitHub の画面に、`数字+ユーザー名@users.noreply.github.com` の形で表示されます）。
 
   ```powershell
@@ -132,6 +143,7 @@ tools/        配布用 zip の作成スクリプト
 | `node tests/background.test.mjs` | 通信・翻訳動作の自動テスト |
 | `node tests/chatgpt.test.mjs` | ChatGPT のプラン（サインイン・トークン更新・翻訳・利用枠の上限・安全面）の自動テスト。OpenAI は偽物に差し替え |
 | `node tests/failover.test.mjs` | 併用（切り替え・上限に達したモデルを一定時間飛ばす・自動で戻る）と、ChatGPT の速さ優先の自動テスト |
+| `node tests/repo-hygiene.mjs` | リポジトリの衛生検査（秘密情報・メールアドレス・PC のパスが混ざっていないか、`releases/` の SHA-256 の整合）。CI でも実行されます |
 | `node tests/roundtrip.test.mjs` | 翻訳結果の取り込みの正確さ（ランダムな文字列で、欠け・ずれがないか） |
 | `node tests/perf-check.mjs "<ブラウザの exe>"` | 拡張機能自身の処理時間・ページ内の負荷・「元に戻す」の正確さを実ブラウザで測定 |
 | `node tests/site-check.mjs "<ブラウザの exe>" <URL>…` | 実際のサイトで、ページ翻訳がどこまで効くか（コードを残すか、Shadow DOM・iframe の有無など）を確認。翻訳は偽の応答で、APIキーは不要 |
