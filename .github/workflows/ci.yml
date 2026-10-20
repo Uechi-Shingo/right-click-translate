@@ -72,7 +72,7 @@ jobs:
         run: |
           CHROME="$(command -v google-chrome)"
           echo "CHROME=$CHROME" >> "$GITHUB_ENV"
-          "$CHROME" --version
+          echo "::notice title=Chrome::$("$CHROME" --version)"
 
       # 前の検証が失敗しても、残りを実行する（失敗を、まとめて確認できるように）
       - name: 拡張機能の読み込み検証（設定が受理される・CSP・設定画面・安全装置）

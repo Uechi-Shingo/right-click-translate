@@ -21,5 +21,9 @@ if [ "$code" -ne 0 ]; then
   # ワークフローコマンドの書式: % → %25、改行 → %0A、復帰 → %0D
   detail="$(printf '%s' "$detail" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')"
   echo "::error title=${title} が失敗しました（終了コード ${code}）::${detail}"
+else
+  # 成功したときも、結果の行（例: 「15 / 15 件成功」）を注釈に残す。実際に検証が行われたことを、ログを開かずに確認できる
+  summary="$(grep -E '件成功' "$out" | tail -n 1)"
+  echo "::notice title=${title}::${summary:-完了}"
 fi
 exit "$code"
