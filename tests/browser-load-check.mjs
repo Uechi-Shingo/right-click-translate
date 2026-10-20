@@ -21,6 +21,8 @@ if (!browserPath) {
 }
 
 const profile = mkdtempSync(path.join(os.tmpdir(), 'ja-translate-check-'));
+// CI（GitHub Actions）など、追加のオプションが要る環境用（例: BROWSER_FLAGS="--no-sandbox"）
+const extraFlags = (process.env.BROWSER_FLAGS || '').split(/\s+/).filter(Boolean);
 const child = spawn(
   browserPath,
   [
@@ -31,6 +33,7 @@ const child = spawn(
     '--no-first-run',
     '--no-default-browser-check',
     '--disable-gpu',
+    ...extraFlags,
     'about:blank',
   ],
   { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] },

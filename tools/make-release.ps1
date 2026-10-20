@@ -179,5 +179,6 @@ Write-Host "  releases: $(Join-Path $releasesDir $zipLeaf)（Git 管理用。最
 Write-Host "  README  : $(if ($readmeUpdated) { 'README.md のダウンロード欄を更新しました' } else { 'README.md に <!-- release:start --> の目印がないため、更新していません' })"
 Write-Host ''
 Write-Host 'Git で公開するとき: git add -A → git commit -m "変更の説明" → git push'
+Write-Host "  そのあと、版のタグ: git tag -a v$version -m `"v$version`" → git push origin v$version"
 Write-Host '（zip だけを置く配布用リポジトリにする場合は、dist フォルダの zip・README.md・SHA-256 を使います）'
 Write-Host '配るときは、zip と SHA-256 の値を「別の経路」でも送ると、すり替えに気づきやすくなります。'

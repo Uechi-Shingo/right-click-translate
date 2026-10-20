@@ -97,11 +97,20 @@ git push -u origin feature/変更の名前   # 3. ブランチを GitHub に退�
 4. GitHub の画面で、そのブランチの「**Compare & pull request**」から PR（プルリクエスト）を作ります。CI の結果（✓ / ✗）と、変更の差分を見直します（ひな形は `.github/pull_request_template.md`）。
 5. 問題がなければ、PR の画面の「**Merge pull request**」で `main` に取り込みます（1 人のときは、ローカルで `git switch main` → `git merge ブランチ名` → `git push` でも構いません）。
 6. 新しい版を出すときは、取り込んだあとの `main` で、`.\tools\make-release.ps1 -RepoUrl https://github.com/Uechi-Shingo/right-click-translate` を実行し、できた `releases/` と README の変更を、コミットして push します。
+7. **版のタグ**を、そのリリースのコミットに付けて push します（あとから、その版の状態に戻れます）。
+
+   ```powershell
+   git tag -a v0.5.0 -m "v0.5.0"      # 版の番号は、manifest.json の version に合わせる
+   git push origin v0.5.0
+   ```
 
 説明書や README の誤字のような**小さな修正は、`main` に直接**コミットして構いません。
 
 - 変更したら、`manifest.json` の `version` と `CHANGELOG.md` の先頭の版を**揃えて**上げます（静的な監査が、一致していることを確認します）。
-- **CI（GitHub Actions）**: push と PR のたびに、静的な監査・自動テスト・リポジトリの検査（秘密情報・個人情報・配布物の整合）が自動で走ります（公開リポジトリでは無料）。ブラウザを使う検証（`*-check.mjs`・`e2e-chatgpt.mjs`）は、実際のブラウザが必要なので、手元で実行します。結果は、リポジトリの「Actions」タブで見られます。
+- **CI（GitHub Actions）**: push と PR のたびに、GitHub が用意する使い捨ての仮想マシン（Linux）で、次の 2 つのジョブが自動で走ります（公開リポジトリでは無料）。結果は、リポジトリの「Actions」タブで見られます。
+  - **監査・自動テスト**: 静的な監査、自動テスト 5 種、リポジトリの検査（秘密情報・個人情報・配布物の整合）
+  - **ブラウザでの検証（Chrome）**: 実行環境に入っている Chrome に、拡張機能を実際に読み込んで確かめる煙テスト（`browser-load-check`・`e2e-chatgpt`・`badge-check`・`context-check`）。ブラウザのサンドボックスは、使い捨ての環境なので、`BROWSER_FLAGS=--no-sandbox` で外しています。失敗したときは、原因が画面の「注釈」に出ます
+  - CI に**入れていない**もの: 実際の Gemini・OpenAI を呼ぶもの（`ab-quality.mjs`・実サーバーでの ChatGPT のサインイン）は、キーや人の操作が必要なため、手元で実行します
 - **取り込み済みのブランチ**は、消して構いません（`git branch -d ブランチ名`。GitHub 上のものは、PR の画面の「Delete branch」）。
 - **メールアドレスに注意**: コミットには、設定したメールアドレスが載り、公開されます。GitHub の「Settings → Emails」で、「Keep my email addresses private」と「Block command line pushes that expose my email」をオンにし、このフォルダでは次のように、非公開用のアドレスを設定してください（GitHub の画面に、`数字+ユーザー名@users.noreply.github.com` の形で表示されます）。
 

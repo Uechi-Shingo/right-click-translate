@@ -1548,7 +1548,8 @@ git push                    # GitHub に反映</pre>
       <ul>
         <li><strong>メールアドレスに注意</strong>：コミットには、設定したメールアドレスが載り、公開されます。GitHub の「Settings → Emails」で、「Keep my email addresses private」と「Block command line pushes that expose my email」をオンにし、このフォルダでは <code>git config user.email</code> に、GitHub が表示する非公開用のアドレス（<code>数字+ユーザー名@users.noreply.github.com</code>）を設定します。</li>
         <li><strong>版を揃える</strong>：<code>manifest.json</code> の <code>version</code> と <code>CHANGELOG.md</code> の先頭の版は、同じにします（静的な監査が確認します）。</li>
-        <li><strong>新しい版を出すとき</strong>：<code>make-release.ps1</code> を実行し、できた <code>releases</code> フォルダと README の変更を、そのままコミットします。</li>
+        <li><strong>新しい版を出すとき</strong>：<code>make-release.ps1</code> を実行し、できた <code>releases</code> フォルダと README の変更を、そのままコミットして push します。そのあと、その版の<strong>タグ</strong>（例：<code>git tag -a v0.5.0 -m "v0.5.0"</code> → <code>git push origin v0.5.0</code>）を付けます。タグがあれば、あとから、その版の状態をいつでも取り出せます。</li>
+        <li><strong>ブランチで作業して、確認してから取り込む</strong>：<code>main</code> は公開版です。変更は、作業用のブランチ（<code>git switch -c feature/名前</code>）で行い、push すると、GitHub 上で自動チェック（CI）が走ります。PR（プルリクエスト）で差分と CI の結果を見てから、<code>main</code> に取り込みます。CI は、GitHub が用意する使い捨ての仮想マシンで、監査・自動テストと、実際の Chrome への読み込み検証を行います（公開リポジトリでは無料）。</li>
         <li><strong>公開してはいけないもの</strong>（APIキー・トークン・個人情報）を、コミットしてしまったら、あとで消しても履歴に残ります。キーなら、先に無効にしてください。</li>
       </ul>
 
